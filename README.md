@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
+# DAYFLOW - HR Management System
 
-## Project info
+A modern, comprehensive HR management system built for streamlining employee attendance, time-off management, and workforce analytics.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Features
 
-## How can I edit this code?
+### 👤 Employee Features
+- **Attendance Tracking**: Real-time check-in/check-out with visual status indicators
+- **Personal Dashboard**: View attendance history, upcoming time-off, and meetings
+- **Time-Off Requests**: Submit and track leave requests with approval status
+- **Profile Management**: Manage personal information, documents, and security settings
 
-There are several ways of editing your application.
+### 👥 HR Features
+- **Team Overview**: Monitor all employees' attendance in real-time
+- **Attendance Analytics**: Visual charts for weekly/monthly trends and patterns
+- **Time-Off Management**: Approve/reject leave requests with balance tracking
+- **Employee Profiles**: Access comprehensive employee information including salary details and documents
+- **Bulk Export**: Download attendance reports in CSV/Excel format
 
-**Use Lovable**
+### 📊 Analytics Dashboard
+- Weekly and monthly attendance trends
+- Check-in time distribution analysis
+- Team attendance heatmap
+- Department-wise attendance statistics
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🛠️ Technologies
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **UI Framework**: Shadcn UI + Radix UI
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts
+- **Routing**: React Router
+- **State Management**: React Context API
+- **Date Handling**: date-fns
+- **Icons**: Lucide React
 
-**Use your preferred IDE**
+## 📦 Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Clone the repository
+git clone https://github.com/anjali-0404/ODOO_GCET.git
+cd people-hub
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install dependencies
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-**Edit a file directly in GitHub**
+## 🌐 Development Server
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The development server runs on:
+- Local: `http://localhost:8080/`
+- Network: `http://[YOUR_IP]:8080/`
 
-**Use GitHub Codespaces**
+## 📁 Project Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+people-hub/
+├── src/
+│   ├── components/       # Reusable UI components
+│   │   ├── ui/          # Shadcn UI components
+│   │   ├── CheckInOutCard.tsx
+│   │   ├── AttendanceCalendar.tsx
+│   │   └── ...
+│   ├── pages/           # Page components
+│   │   ├── Dashboard.tsx
+│   │   ├── Attendance.tsx
+│   │   ├── Employees.tsx
+│   │   └── ...
+│   ├── contexts/        # React Context providers
+│   ├── hooks/           # Custom React hooks
+│   └── lib/             # Utility functions
+├── public/              # Static assets
+└── package.json
+```
 
-## What technologies are used for this project?
+## 🔐 User Roles
 
-This project is built with:
+- **Employee**: Access personal attendance, time-off, and profile
+- **HR**: Full access to team management, analytics, and approvals
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 👨‍💻 Development
 
-## How can I deploy this project?
+```bash
+# Run linter
+npm run lint
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+# Build for development
+npm run build:dev
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 📄 License
 
-Yes, you can!
+This project is part of the ODOO GCET Hackathon.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🤝 Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Contributions are welcome! Feel free to submit issues and pull requests.
+
+---
+
+
