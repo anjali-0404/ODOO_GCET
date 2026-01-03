@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DashboardHeader } from "@/components/DashboardHeader";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,7 +103,8 @@ export default function TimeOff() {
   };
 
   const handleSubmit = () => {
-    if (!user || !startDate || !endDate || !allocation) {
+    // Validate required fields - allocation can be 0 so check for empty string
+    if (!user || !startDate || !endDate || allocation === "" || allocation === undefined) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -112,9 +113,30 @@ export default function TimeOff() {
       return;
     }
 
-    // Calculate days between dates
+    // Validate dates
     const start = new Date(startDate);
     const end = new Date(endDate);
+    if (end < start) {
+      toast({
+        title: "Invalid dates",
+        description: "End date cannot be before start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate allocation is a positive number
+    const allocationNum = parseFloat(allocation);
+    if (isNaN(allocationNum) || allocationNum <= 0) {
+      toast({
+        title: "Invalid allocation",
+        description: "Please enter a valid number of days",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Calculate days between dates (use existing start/end variables)
     const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     const newRequest: TimeOffRequest = {
@@ -166,10 +188,8 @@ export default function TimeOff() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
-
-      <main className="container mx-auto px-4 py-6">
+    <DashboardLayout>
+      <div className="p-6">
         {/* Leave balances */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
@@ -427,7 +447,7 @@ export default function TimeOff() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

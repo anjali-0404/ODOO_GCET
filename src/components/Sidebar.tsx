@@ -15,12 +15,22 @@ import {
   ChevronDown,
   Clock,
   UsersRound,
+  Shield,
 } from "lucide-react";
 import { UserProfileDropdown } from "./UserProfileDropdown";
+import { useAuth } from "@/contexts/AuthContext";
 
-const mainNavItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  hrOnly?: boolean;
+}
+
+const mainNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Employees", href: "/dashboard/employees", icon: UsersRound },
+  { label: "Employees", href: "/dashboard/employees", icon: UsersRound, hrOnly: true },
   { label: "Attendance", href: "/dashboard/attendance", icon: Clock },
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
   { label: "Time Off", href: "/dashboard/time-off", icon: CalendarOff },
@@ -43,6 +53,13 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
+  const { role } = useAuth();
+  const isHROrAdmin = role === "hr" || role === "admin";
+
+  // Filter nav items based on user role
+  const visibleNavItems = mainNavItems.filter(
+    (item) => !item.hrOnly || isHROrAdmin
+  );
 
   return (
     <aside className={cn("w-64 bg-sidebar-background border-r border-sidebar-border flex flex-col h-screen sticky top-0", className)}>
@@ -68,7 +85,7 @@ export function Sidebar({ className }: SidebarProps) {
           </span>
         </div>
         <nav className="space-y-1 px-3">
-          {mainNavItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link
@@ -83,6 +100,9 @@ export function Sidebar({ className }: SidebarProps) {
               >
                 <item.icon className="h-4 w-4" />
                 <span className="flex-1">{item.label}</span>
+                {item.hrOnly && (
+                  <Shield className="h-3 w-3 text-primary" />
+                )}
                 {item.badge && (
                   <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-primary text-primary-foreground">
                     {item.badge}

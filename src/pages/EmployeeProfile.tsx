@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,19 +11,42 @@ import { ArrowLeft, Edit2, Save, X, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/services/api";
+
+interface EmployeeData {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+  department?: string;
+  position?: string;
+  phone?: string;
+  location?: string;
+  status?: string;
+  join_date?: string;
+}
 
 export default function EmployeeProfile() {
+  const { id } = useParams<{ id: string }>();
   const { user, updateUserProfile } = useAuth();
   const { toast } = useToast();
   
+  const [employee, setEmployee] = useState<EmployeeData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Determine if viewing own profile or another employee's profile
+  const isOwnProfile = !id || (user && id === String(user.id));
+  const displayUser = isOwnProfile ? user : employee;
+  
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    department: user?.department || "",
-    position: user?.position || "",
-    location: user?.location || "",
+    name: "",
+    email: "",
+    phone: "",
+    department: "",
+    position: "",
+    location: "",
   });
 
   // Extended profile data (mock for now)
@@ -60,9 +83,42 @@ export default function EmployeeProfile() {
     pfEmployer: 3000,
     professionalTax: 200,
   });
-  
+
+  // Fetch employee data if viewing another employee's profile
   useEffect(() => {
-    if (user) {
+    const fetchEmployee = async () => {
+      if (id && (!user || id !== String(user.id))) {
+        setIsLoading(true);
+        try {
+          const employeeData = await api.getUser(parseInt(id));
+          setEmployee(employeeData);
+          setFormData({
+            name: employeeData.name || "",
+            email: employeeData.email || "",
+            phone: employeeData.phone || "",
+            department: employeeData.department || "",
+            position: employeeData.position || "",
+            location: employeeData.location || "",
+          });
+        } catch (error) {
+          console.error("Failed to fetch employee:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load employee profile.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    fetchEmployee();
+  }, [id, user]);
+  
+  // Update form data when viewing own profile
+  useEffect(() => {
+    if (isOwnProfile && user) {
       setFormData({
         name: user.name,
         email: user.email,
@@ -72,7 +128,7 @@ export default function EmployeeProfile() {
         location: user.location || "",
       });
     }
-  }, [user]);
+  }, [user, isOwnProfile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -101,39 +157,50 @@ export default function EmployeeProfile() {
   };
 
   const handleCancel = () => {
-    if (user) {
+    if (displayUser) {
       setFormData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || "",
-        department: user.department || "",
-        position: user.position || "",
-        location: user.location || "",
+        name: displayUser.name,
+        email: displayUser.email,
+        phone: displayUser.phone || "",
+        department: displayUser.department || "",
+        position: displayUser.position || "",
+        location: displayUser.location || "",
       });
     }
     setIsEditing(false);
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <DashboardHeader />
         <main className="container mx-auto px-4 py-6">
-          <p>Loading...</p>
+          <p>Loading employee profile...</p>
         </main>
       </div>
     );
   }
 
-  const initials = user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  if (!displayUser) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
+        <main className="container mx-auto px-4 py-6">
+          <p>Employee not found.</p>
+        </main>
+      </div>
+    );
+  }
+
+  const initials = displayUser.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       <main className="container mx-auto px-4 py-6">
-        <Link to="/dashboard" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+        <Link to={isOwnProfile ? "/dashboard" : "/dashboard/employees"} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
+          {isOwnProfile ? "Back to Dashboard" : "Back to Employees"}
         </Link>
         
         {/* Profile Header Card */}
@@ -142,10 +209,10 @@ export default function EmployeeProfile() {
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="relative">
                 <Avatar className="h-24 w-24 border-4 border-border">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
                   <AvatarFallback className="bg-primary/10 text-primary text-2xl">{initials}</AvatarFallback>
                 </Avatar>
-                {!isEditing && (
+                {isOwnProfile && !isEditing && (
                   <button 
                     onClick={() => setIsEditing(true)} 
                     className="absolute bottom-0 right-0 h-8 w-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -163,7 +230,7 @@ export default function EmployeeProfile() {
                         name="name" 
                         value={formData.name} 
                         onChange={handleInputChange} 
-                        disabled={!isEditing} 
+                        disabled={!isEditing || !isOwnProfile} 
                         className="font-semibold" 
                       />
                     </div>
@@ -173,7 +240,7 @@ export default function EmployeeProfile() {
                         name="position" 
                         value={formData.position} 
                         onChange={handleInputChange} 
-                        disabled={!isEditing} 
+                        disabled={!isEditing || !isOwnProfile} 
                       />
                     </div>
                     <div>
@@ -183,7 +250,7 @@ export default function EmployeeProfile() {
                         type="email" 
                         value={formData.email} 
                         onChange={handleInputChange} 
-                        disabled={!isEditing} 
+                        disabled={!isEditing || !isOwnProfile} 
                       />
                     </div>
                   </div>
@@ -195,7 +262,7 @@ export default function EmployeeProfile() {
                         type="tel" 
                         value={formData.phone} 
                         onChange={handleInputChange} 
-                        disabled={!isEditing} 
+                        disabled={!isEditing || !isOwnProfile} 
                       />
                     </div>
                     <div>
@@ -204,7 +271,7 @@ export default function EmployeeProfile() {
                         name="department" 
                         value={formData.department} 
                         onChange={handleInputChange} 
-                        disabled={!isEditing} 
+                        disabled={!isEditing || !isOwnProfile} 
                       />
                     </div>
                     <div>
@@ -213,12 +280,12 @@ export default function EmployeeProfile() {
                         name="location" 
                         value={formData.location} 
                         onChange={handleInputChange} 
-                        disabled={!isEditing} 
+                        disabled={!isEditing || !isOwnProfile} 
                       />
                     </div>
                   </div>
                 </div>
-                {isEditing && (
+                {isOwnProfile && isEditing && (
                   <div className="flex gap-2 mt-4">
                     <Button onClick={handleSave} size="sm">
                       <Save className="h-4 w-4 mr-2" />

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Upload, 
@@ -17,169 +18,141 @@ import {
   Calendar,
   User,
   Trash2,
-  Share2
+  Share2,
+  Archive
 } from "lucide-react";
+import { useDocuments, Document } from "@/contexts/DocumentsContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface Document {
-  id: string;
-  name: string;
-  type: string;
-  category: string;
-  size: string;
-  uploadedBy: string;
-  uploadedDate: string;
-  status: "active" | "archived" | "pending";
-  isShared: boolean;
-}
-
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    name: "Employment Contract - 2024.pdf",
-    type: "PDF",
-    category: "Contracts",
-    size: "2.4 MB",
-    uploadedBy: "HR Department",
-    uploadedDate: "2024-01-15",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "2",
-    name: "Company Handbook.pdf",
-    type: "PDF",
-    category: "Policies",
-    size: "5.2 MB",
-    uploadedBy: "HR Department",
-    uploadedDate: "2026-01-01",
-    status: "active",
-    isShared: true,
-  },
-  {
-    id: "3",
-    name: "Benefits Enrollment Form.pdf",
-    type: "PDF",
-    category: "Benefits",
-    size: "856 KB",
-    uploadedBy: "Sarah Johnson",
-    uploadedDate: "2024-03-10",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "4",
-    name: "Tax Documents 2025.zip",
-    type: "ZIP",
-    category: "Tax",
-    size: "12.1 MB",
-    uploadedBy: "Payroll System",
-    uploadedDate: "2026-01-02",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "5",
-    name: "Performance Review Q4 2025.pdf",
-    type: "PDF",
-    category: "Performance",
-    size: "1.8 MB",
-    uploadedBy: "Michael Chen",
-    uploadedDate: "2025-12-28",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "6",
-    name: "Training Certificate - React Advanced.pdf",
-    type: "PDF",
-    category: "Training",
-    size: "624 KB",
-    uploadedBy: "Sarah Johnson",
-    uploadedDate: "2025-11-15",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "7",
-    name: "Payslip December 2025.pdf",
-    type: "PDF",
-    category: "Payroll",
-    size: "342 KB",
-    uploadedBy: "Payroll System",
-    uploadedDate: "2025-12-31",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "8",
-    name: "NDA Agreement.pdf",
-    type: "PDF",
-    category: "Contracts",
-    size: "1.2 MB",
-    uploadedBy: "Legal Department",
-    uploadedDate: "2024-01-20",
-    status: "active",
-    isShared: false,
-  },
-  {
-    id: "9",
-    name: "Remote Work Policy 2026.docx",
-    type: "DOCX",
-    category: "Policies",
-    size: "456 KB",
-    uploadedBy: "HR Department",
-    uploadedDate: "2026-01-01",
-    status: "active",
-    isShared: true,
-  },
-  {
-    id: "10",
-    name: "Insurance Card - Health.pdf",
-    type: "PDF",
-    category: "Benefits",
-    size: "128 KB",
-    uploadedBy: "Benefits Admin",
-    uploadedDate: "2024-02-01",
-    status: "active",
-    isShared: false,
-  },
-];
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Documents() {
+  const { documents, addDocument, deleteDocument, archiveDocument, shareDocument, unshareDocument } = useDocuments();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const getFileIcon = (type: string) => {
-    return <FileText className="h-4 w-4" />;
-  };
+  const [newDoc, setNewDoc] = useState({
+    category: "Contracts",
+  });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "default";
-      case "archived": return "secondary";
-      case "pending": return "outline";
-      default: return "default";
+  const getTypeIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
+      case 'docx': 
+      case 'doc': return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'zip': return <Folder className="h-5 w-5 text-yellow-500" />;
+      default: return <File className="h-5 w-5 text-gray-500" />;
     }
   };
 
-  const filteredDocuments = mockDocuments.filter((doc) => {
+  const categories = [...new Set(documents.map(d => d.category))];
+
+  const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          doc.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === "all" || doc.category.toLowerCase() === activeTab.toLowerCase();
-    return matchesSearch && matchesTab;
+    if (activeTab === "all") return matchesSearch && doc.status !== "archived";
+    if (activeTab === "shared") return matchesSearch && doc.isShared;
+    if (activeTab === "archived") return matchesSearch && doc.status === "archived";
+    return matchesSearch && doc.category.toLowerCase() === activeTab && doc.status !== "archived";
   });
 
-  const categories = Array.from(new Set(mockDocuments.map(d => d.category)));
+  const stats = {
+    total: documents.filter(d => d.status !== "archived").length,
+    shared: documents.filter(d => d.isShared).length,
+    archived: documents.filter(d => d.status === "archived").length,
+  };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        toast({ title: "File too large", description: "Maximum file size is 50MB.", variant: "destructive" });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile) {
+      toast({ title: "Error", description: "Please select a file.", variant: "destructive" });
+      return;
+    }
+
+    addDocument({
+      name: selectedFile.name,
+      type: selectedFile.name.split(".").pop()?.toUpperCase() || "FILE",
+      category: newDoc.category,
+      size: selectedFile.size > 1024 * 1024 
+        ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`
+        : `${(selectedFile.size / 1024).toFixed(0)} KB`,
+      uploadedBy: "You",
+      uploadedDate: new Date().toISOString().split("T")[0],
+      status: "active",
+      isShared: false,
+    });
+
+    setSelectedFile(null);
+    setNewDoc({ category: "Contracts" });
+    setIsUploadOpen(false);
+    toast({ title: "Document uploaded", description: `${selectedFile.name} has been uploaded.` });
+  };
+
+  const handleDelete = () => {
+    if (deleteDocId) {
+      deleteDocument(deleteDocId);
+      setDeleteDocId(null);
+      toast({ title: "Document deleted", description: "Document has been removed." });
+    }
+  };
+
+  const handleArchive = (id: string) => {
+    archiveDocument(id);
+    toast({ title: "Document archived", description: "Document has been archived." });
+  };
+
+  const handleShare = (id: string, isShared: boolean) => {
+    if (isShared) {
+      unshareDocument(id);
+      toast({ title: "Sharing disabled", description: "Document is no longer shared." });
+    } else {
+      shareDocument(id);
+      toast({ title: "Document shared", description: "Document is now shared." });
+    }
   };
 
   return (
@@ -189,55 +162,51 @@ export default function Documents() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Documents</h1>
-            <p className="text-muted-foreground">Manage your personal and company documents</p>
+            <p className="text-muted-foreground">Manage your files and documents</p>
           </div>
-          <Button>
+          <Button onClick={() => setIsUploadOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
             Upload Document
           </Button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Documents</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4" />Total Documents
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{mockDocuments.length}</div>
+              <div className="text-3xl font-bold">{stats.total}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Categories</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Share2 className="h-4 w-4" />Shared
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{categories.length}</div>
+              <div className="text-3xl font-bold text-blue-600">{stats.shared}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Shared</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Archive className="h-4 w-4" />Archived
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">
-                {mockDocuments.filter(d => d.isShared).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Size</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">28.5 MB</div>
+              <div className="text-3xl font-bold text-gray-600">{stats.archived}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
+        <div className="flex gap-4 mb-6">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search documents..."
@@ -248,93 +217,47 @@ export default function Documents() {
           </div>
         </div>
 
-        {/* Categories */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-          {categories.map((category) => {
-            const count = mockDocuments.filter(d => d.category === category).length;
-            return (
-              <Card 
-                key={category} 
-                className="cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => setActiveTab(category)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Folder className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{category}</p>
-                      <p className="text-xs text-muted-foreground">{count} files</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList>
-            <TabsTrigger value="all">All Documents</TabsTrigger>
-            {categories.slice(0, 4).map((category) => (
-              <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="shared">Shared</TabsTrigger>
+            <TabsTrigger value="archived">Archived</TabsTrigger>
+            {categories.slice(0, 4).map((cat) => (
+              <TabsTrigger key={cat} value={cat.toLowerCase()}>{cat}</TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
 
-        {/* Documents Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {activeTab === "all" ? "All Documents" : activeTab}
-              <span className="text-muted-foreground font-normal ml-2">
-                ({filteredDocuments.length})
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent transition-colors"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      {getFileIcon(doc.type)}
+        {/* Documents List */}
+        <div className="space-y-2">
+          {filteredDocuments.map((doc) => (
+            <Card key={doc.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    {getTypeIcon(doc.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium truncate">{doc.name}</h4>
+                      {doc.isShared && <Badge variant="secondary" className="text-xs">Shared</Badge>}
+                      {doc.status === "archived" && <Badge variant="outline" className="text-xs">Archived</Badge>}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium truncate">{doc.name}</p>
-                        {doc.isShared && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Share2 className="h-3 w-3 mr-1" />
-                            Shared
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <File className="h-3 w-3" />
-                          {doc.type} • {doc.size}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {doc.uploadedBy}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(doc.uploadedDate)}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                      <span className="flex items-center gap-1">
+                        <Folder className="h-3 w-3" />{doc.category}
+                      </span>
+                      <span>{doc.type} • {doc.size}</span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />{doc.uploadedBy}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />{new Date(doc.uploadedDate).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={getStatusColor(doc.status)}>
-                      {doc.status}
-                    </Badge>
                     <Button variant="ghost" size="icon">
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -348,41 +271,111 @@ export default function Documents() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleShare(doc.id, doc.isShared)}>
                           <Share2 className="mr-2 h-4 w-4" />
-                          Share
+                          {doc.isShared ? "Unshare" : "Share"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                        {doc.status !== "archived" && (
+                          <DropdownMenuItem onClick={() => handleArchive(doc.id)}>
+                            <Archive className="mr-2 h-4 w-4" />Archive
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => setDeleteDocId(doc.id)} 
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 </div>
-              ))}
-            </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-            {filteredDocuments.length === 0 && (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No documents found</p>
-                <Button>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload your first document
-                </Button>
+        {filteredDocuments.length === 0 && (
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No documents found</p>
+          </div>
+        )}
+
+        {/* Upload Dialog */}
+        <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload Document</DialogTitle>
+              <DialogDescription>Upload a new document to your workspace</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={newDoc.category} onValueChange={(v) => setNewDoc({ ...newDoc, category: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Contracts">Contracts</SelectItem>
+                    <SelectItem value="Policies">Policies</SelectItem>
+                    <SelectItem value="Benefits">Benefits</SelectItem>
+                    <SelectItem value="Tax">Tax</SelectItem>
+                    <SelectItem value="Performance">Performance</SelectItem>
+                    <SelectItem value="Training">Training</SelectItem>
+                    <SelectItem value="Payroll">Payroll</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label>File</Label>
+                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    id="doc-upload"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <label htmlFor="doc-upload" className="cursor-pointer">
+                    <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Click to select a file (max 50MB)</p>
+                  </label>
+                  {selectedFile && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span className="text-sm font-medium">{selectedFile.name}</span>
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setSelectedFile(null); setIsUploadOpen(false); }}>Cancel</Button>
+              <Button onClick={handleUpload} disabled={!selectedFile}>Upload</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deleteDocId} onOpenChange={() => setDeleteDocId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Document</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this document? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

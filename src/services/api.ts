@@ -1,26 +1,87 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiService {
-  async request(endpoint: string, options: RequestInit = {}) {
+  private getToken(): string | null {
+    return localStorage.getItem('auth_token');
+  }
+
+  async request(endpoint: string, options: RequestInit = {}, requireAuth: boolean = false) {
     const url = `${API_URL}${endpoint}`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+
+    const token = this.getToken();
+    if (token && requireAuth) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const config: RequestInit = {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     };
 
     try {
       const response = await fetch(url, config);
+      
+      if (response.status === 401 || response.status === 403) {
+        // Token expired or invalid
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('odoo_user');
+        window.location.href = '/sign-in';
+        throw new Error('Unauthorized');
+      }
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
       return await response.json();
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
     }
+  }
+
+  // Auth
+  async signIn(email: string, password: string) {
+    return this.request('/auth/signin', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async signUp(name: string, email: string, password: string, role: string = 'employee') {
+    return this.request('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role }),
+    });
+  }
+
+  async getCurrentUser() {
+    return this.request('/auth/me', {}, true);
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.request('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }, true);
+  }
+
+  async updateProfile(profileData: any) {
+    return this.request('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    }, true);
+  }
+
+  async deleteAccount(password: string) {
+    return this.request('/auth/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    }, true);
   }
 
   // Notes

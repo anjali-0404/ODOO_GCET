@@ -9,6 +9,7 @@ import attendanceRoutes from './routes/attendance.js';
 import timeOffRoutes from './routes/timeOff.js';
 import benefitsRoutes from './routes/benefits.js';
 import usersRoutes from './routes/users.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/projects', projectsRoutes);
