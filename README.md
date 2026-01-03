@@ -1,5 +1,3 @@
-
-```md
 # 🧑‍💼 ODOO – HR Management System
 
 A **modern, enterprise-grade HR Management System** built to streamline employee attendance, time-off management, analytics, and workforce operations.
@@ -11,24 +9,24 @@ A **modern, enterprise-grade HR Management System** built to streamline employee
 ## 🚀 Key Features
 
 ### 👤 Employee Features
-- **Attendance Tracking** – Real-time check-in / check-out
-- **Personal Dashboard** – Attendance history & upcoming leaves
-- **Time-Off Requests** – Apply, track, and manage leave requests
-- **Profile Management** – Personal details, documents & security
-- **Notifications** – Important alerts & reminders
+- Real-time attendance check-in / check-out
+- Personal dashboard with attendance history
+- Time-off request and tracking system
+- Profile & document management
+- Notifications and alerts
 
 ### 👥 HR & Admin Features
-- **Team Overview** – Live employee attendance monitoring
-- **Attendance Analytics** – Weekly / monthly trend analysis
-- **Leave Management** – Approve / reject leave requests
-- **Employee Profiles** – Salary, documents & department data
-- **Bulk Export** – Attendance reports in CSV / Excel
-- **Role-Based Access Control**
+- Live team attendance monitoring
+- Attendance analytics (weekly / monthly)
+- Leave approval & balance tracking
+- Employee profiles with department data
+- Export reports (CSV / Excel)
+- Role-based access control
 
 ### 📊 Analytics Dashboard
-- Attendance trends
-- Late & early arrival insights
-- Department-wise heatmaps
+- Attendance trends & patterns
+- Late / early arrival insights
+- Department-wise statistics
 - Check-in time distribution
 
 ---
@@ -36,48 +34,29 @@ A **modern, enterprise-grade HR Management System** built to streamline employee
 ## 🛠️ Technology Stack
 
 ### Frontend
-| Technology | Purpose | Version |
-|----------|--------|--------|
-| React | UI Framework | 18.3.1 |
-| TypeScript | Type Safety | 5.6.2 |
-| Vite | Build Tool | 5.4.19 |
-| Tailwind CSS | Styling | 3.4.1 |
-| Shadcn UI | UI Components | Latest |
-| Radix UI | Accessibility | Latest |
-| React Router | Routing | 6.29.0 |
-| Recharts | Charts | 2.15.0 |
-| Lucide React | Icons | 0.468.0 |
-| date-fns | Date Utilities | 4.1.0 |
+- React 18.3.1
+- TypeScript 5.6.2
+- Vite 5.4.19
+- Tailwind CSS
+- Shadcn UI + Radix UI
+- React Router
+- Recharts
+- Lucide React
+- date-fns
 
 ### Backend
-- Node.js  
-- Express.js  
-- PostgreSQL  
+- Node.js
+- Express.js
+- PostgreSQL
 - Supabase (Auth + Database)
 
 ---
 
-## 🔐 User Roles & Permissions
+## 🔐 User Roles
 
-### Role Hierarchy
-```
-
-Admin
-├── Full system access
-├── User & role management
-└── System configuration
-
-HR
-├── Attendance & leave approvals
-├── Employee management
-└── Analytics access
-
-Employee
-├── Personal attendance
-├── Time-off requests
-└── Profile management
-
-````
+- **Admin** – Full system access & configuration
+- **HR** – Employee management, approvals & analytics
+- **Employee** – Attendance, time-off & profile access
 
 ---
 
@@ -88,50 +67,38 @@ Employee
 - npm / yarn
 - Git
 
----
-
-### 1️⃣ Clone Repository
+### Clone Repository
 ```bash
 git clone https://github.com/anjali-0404/ODOO_GCET.git
 cd people-hub
-````
+```
 
----
-
-### 2️⃣ Frontend Setup
-
+### Frontend Setup
 ```bash
 npm install
 npm run dev
 ```
+Frontend runs on **http://localhost:8080**
 
-🌐 Frontend → [http://localhost:8080](http://localhost:8080)
-
----
-
-### 3️⃣ Backend Setup
-
+### Backend Setup
 ```bash
 cd server
 npm install
 node index.js
 ```
-
-🌐 Backend API → [http://localhost:3001](http://localhost:3001)
+Backend API runs on **http://localhost:3001**
 
 ---
 
-### 4️⃣ Environment Variables
+## 🌱 Environment Variables
 
-#### Root `.env`
-
+### Root `.env`
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-#### `server/.env`
-
+### `server/.env`
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/odoo_hr
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
@@ -143,80 +110,48 @@ NODE_ENV=development
 ---
 
 ## 📁 Project Structure
-
 ```
 people-hub/
-├── src/                  # Frontend source
-│   ├── components/
-│   ├── pages/
-│   ├── contexts/
-│   ├── hooks/
-│   ├── lib/
-│   └── assets/
-├── server/               # Backend source
-│   ├── routes/
-│   ├── middleware/
-│   ├── config/
-│   └── index.js
-├── supabase/
-│   └── migrations/
+├── src/        # Frontend
+├── server/     # Backend
+├── supabase/   # Database migrations
 ├── public/
 └── package.json
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 API Overview
 
 ### Authentication
-
-```
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/logout
-```
+- POST /api/auth/login
+- POST /api/auth/register
+- POST /api/auth/logout
 
 ### Attendance
-
-```
-GET  /api/attendance
-POST /api/attendance/checkin
-POST /api/attendance/checkout
-```
+- GET  /api/attendance
+- POST /api/attendance/checkin
+- POST /api/attendance/checkout
 
 ### Time-Off
-
-```
-GET  /api/timeoff
-POST /api/timeoff
-PUT  /api/timeoff/:id
-```
+- GET  /api/timeoff
+- POST /api/timeoff
+- PUT  /api/timeoff/:id
 
 ---
 
 ## 🚀 Deployment
 
 ### Frontend
-
-* Vercel
-* Netlify
-
 ```bash
 npm run build
 ```
-
-Deploy the `dist/` folder.
-
----
+Deploy `dist/` on **Vercel / Netlify**
 
 ### Backend
+Deploy on **Railway / Render / Heroku**
 
-* Railway
-* Render
-* Heroku
-
-⚠️ Ensure backend listens on:
-
+> Ensure backend uses:
 ```js
 app.listen(process.env.PORT || 3001);
 ```
@@ -224,25 +159,16 @@ app.listen(process.env.PORT || 3001);
 ---
 
 ## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Open a Pull Request
+Contributions are welcome via issues and pull requests.
 
 ---
 
 ## 📄 License
-
 MIT License
 
 ---
 
 <div align="center">
-  <strong>Built with passion for modern HR management</strong><br/>
-  ODOO GCET Hackathon Project
+Built with passion for modern HR management  
+<strong>ODOO GCET Hackathon Project</strong>
 </div>
-```
-
----
-
