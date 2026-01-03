@@ -1,4 +1,4 @@
-# DAYFLOW - HR Management System
+# odoo - HR Management System
 
 A modern, comprehensive HR management system built for streamlining employee attendance, time-off management, and workforce analytics.
 

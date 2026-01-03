@@ -14,7 +14,7 @@ import {
 import { useState } from "react";
 import { Mail, Lock, Users, Briefcase } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -99,7 +99,7 @@ const SignIn = () => {
       <Card className="w-full max-w-sm mx-auto">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={dayflowLogo} alt="Dayflow" className="h-8 invert" />
+            <img src={odooLogo} alt="odoo" className="h-12" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>

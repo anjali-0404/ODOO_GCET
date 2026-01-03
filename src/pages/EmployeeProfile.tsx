@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,141 +6,230 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, Phone, MapPin, Building2, Briefcase, Users, Calendar, Edit2, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Edit2, Save, X, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock employee data - in real app this would come from API
-const mockEmployee = {
-  id: "1",
-  name: "John Doe",
-  loginId: "OIJODO2022D001",
-  email: "john.doe@company.com",
-  phone: "+1 (555) 123-4567",
-  position: "Software Engineer",
-  department: "Engineering",
-  manager: "Sarah Williams",
-  location: "New York, NY",
-  company: "Acme Inc.",
-  dateOfJoining: "2022-03-15",
-  dateOfBirth: "1990-05-20",
-  address: "123 Main Street, Apt 4B, New York, NY 10001",
-  nationality: "American",
-  gender: "Male",
-  maritalStatus: "Single",
-  personalEmail: "johndoe@gmail.com",
-  about: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.",
-  whatILove: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.",
-  hobbies: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-  skills: ["JavaScript", "TypeScript", "React", "Node.js", "Python"],
-  certifications: ["AWS Certified Developer", "Google Cloud Professional"],
-  bankDetails: {
+export default function EmployeeProfile() {
+  const { user, updateUserProfile } = useAuth();
+  const { toast } = useToast();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    department: user?.department || "",
+    position: user?.position || "",
+    location: user?.location || "",
+  });
+
+  // Extended profile data (mock for now)
+  const [profileData, setProfileData] = useState({
+    about: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    whatILove: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    hobbies: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    skills: ["JavaScript", "TypeScript", "React", "Node.js"],
+    certifications: ["AWS Certified Developer", "Google Cloud Professional"],
+    dateOfBirth: "1990-05-20",
+    address: "123 Main Street, Apt 4B, New York, NY 10001",
+    nationality: "American",
+    personalEmail: "john@gmail.com",
+    gender: "Male",
+    maritalStatus: "Single",
+    dateOfJoining: "2022-03-15",
     accountNumber: "123456789012",
     bankName: "Chase Bank",
     ifscCode: "CHASE0001234",
     panNo: "ABCDE1234F",
     uanNo: "100123456789",
     empCode: "EMP001",
-  },
-  salary: {
     monthlyWage: 50000,
     yearlyWage: 600000,
     workingDays: 5,
     breakTime: "1 hour",
     basic: 25000,
     hra: 12500,
-    houseRentAllowance: 12500,
     standardAllowance: 4167,
     performanceBonus: 2083,
     lta: 2083,
-    leaveTravel: 2083,
     fixedAllowance: 2918,
     pfEmployee: 3000,
     pfEmployer: 3000,
     professionalTax: 200,
-  },
-};
+  });
+  
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        department: user.department || "",
+        position: user.position || "",
+        location: user.location || "",
+      });
+    }
+  }, [user]);
 
-export default function EmployeeProfile() {
-  const { id } = useParams();
-  const { role, user } = useAuth();
-  const employee = mockEmployee; // In real app, fetch based on id
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  // Check if user is viewing their own profile
-  const isOwnProfile = !id || id === "me" || id === user?.id;
+  const handleSave = async () => {
+    if (!user) return;
+    
+    try {
+      console.log("Saving profile:", formData);
+      await updateUserProfile(formData);
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  const initials = employee.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        department: user.department || "",
+        position: user.position || "",
+        location: user.location || "",
+      });
+    }
+    setIsEditing(false);
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
+        <main className="container mx-auto px-4 py-6">
+          <p>Loading...</p>
+        </main>
+      </div>
+    );
+  }
+
+  const initials = user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
-
       <main className="container mx-auto px-4 py-6">
-        {/* Back button */}
         <Link to="/dashboard" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Employees
+          Back to Dashboard
         </Link>
-
-        {/* Profile header */}
+        
+        {/* Profile Header Card */}
         <Card className="mb-6">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              {/* Avatar */}
               <div className="relative">
                 <Avatar className="h-24 w-24 border-4 border-border">
-                  <AvatarImage src={undefined} alt={employee.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                    {initials}
-                  </AvatarFallback>
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">{initials}</AvatarFallback>
                 </Avatar>
-                <button className="absolute bottom-0 right-0 h-8 w-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
-                  <Edit2 className="h-4 w-4" />
-                </button>
+                {!isEditing && (
+                  <button 
+                    onClick={() => setIsEditing(true)} 
+                    className="absolute bottom-0 right-0 h-8 w-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-
-              {/* Basic info */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Name</Label>
-                    <Input defaultValue={employee.name} className="font-semibold" />
+              <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Name</Label>
+                      <Input 
+                        name="name" 
+                        value={formData.name} 
+                        onChange={handleInputChange} 
+                        disabled={!isEditing} 
+                        className="font-semibold" 
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Job Position</Label>
+                      <Input 
+                        name="position" 
+                        value={formData.position} 
+                        onChange={handleInputChange} 
+                        disabled={!isEditing} 
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Email</Label>
+                      <Input 
+                        name="email" 
+                        type="email" 
+                        value={formData.email} 
+                        onChange={handleInputChange} 
+                        disabled={!isEditing} 
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Job Position</Label>
-                    <Input defaultValue={employee.position} />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Email</Label>
-                    <Input type="email" defaultValue={employee.email} />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Mobile</Label>
-                    <Input type="tel" defaultValue={employee.phone} />
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Mobile</Label>
+                      <Input 
+                        name="phone" 
+                        type="tel" 
+                        value={formData.phone} 
+                        onChange={handleInputChange} 
+                        disabled={!isEditing} 
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Department</Label>
+                      <Input 
+                        name="department" 
+                        value={formData.department} 
+                        onChange={handleInputChange} 
+                        disabled={!isEditing} 
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Location</Label>
+                      <Input 
+                        name="location" 
+                        value={formData.location} 
+                        onChange={handleInputChange} 
+                        disabled={!isEditing} 
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Company</Label>
-                    <Input defaultValue={employee.company} />
+                {isEditing && (
+                  <div className="flex gap-2 mt-4">
+                    <Button onClick={handleSave} size="sm">
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </Button>
+                    <Button onClick={handleCancel} variant="outline" size="sm">
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Department</Label>
-                    <Input defaultValue={employee.department} />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Manager</Label>
-                    <Input defaultValue={employee.manager} />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Location</Label>
-                    <Input defaultValue={employee.location} />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -152,9 +241,10 @@ export default function EmployeeProfile() {
             <TabsTrigger value="resume">Resume</TabsTrigger>
             <TabsTrigger value="private">Private Info</TabsTrigger>
             <TabsTrigger value="salary">Salary Info</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="settings">HR Settings</TabsTrigger>
           </TabsList>
 
+          {/* Resume Tab */}
           <TabsContent value="resume">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
@@ -163,7 +253,11 @@ export default function EmployeeProfile() {
                     <CardTitle className="text-lg">About</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{employee.about}</p>
+                    <Textarea 
+                      defaultValue={profileData.about} 
+                      className="min-h-[100px]"
+                      placeholder="Tell us about yourself..."
+                    />
                   </CardContent>
                 </Card>
 
@@ -172,7 +266,11 @@ export default function EmployeeProfile() {
                     <CardTitle className="text-lg">What I love about my job</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{employee.whatILove}</p>
+                    <Textarea 
+                      defaultValue={profileData.whatILove} 
+                      className="min-h-[100px]"
+                      placeholder="What do you love about your job..."
+                    />
                   </CardContent>
                 </Card>
 
@@ -181,7 +279,11 @@ export default function EmployeeProfile() {
                     <CardTitle className="text-lg">My interests and hobbies</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{employee.hobbies}</p>
+                    <Textarea 
+                      defaultValue={profileData.hobbies} 
+                      className="min-h-[100px]"
+                      placeholder="Your interests and hobbies..."
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -193,7 +295,7 @@ export default function EmployeeProfile() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {employee.skills.map((skill) => (
+                      {profileData.skills.map((skill) => (
                         <span
                           key={skill}
                           className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full"
@@ -203,7 +305,8 @@ export default function EmployeeProfile() {
                       ))}
                     </div>
                     <Button variant="ghost" size="sm" className="mt-4 text-primary">
-                      + Add Skills
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Skills
                     </Button>
                   </CardContent>
                 </Card>
@@ -214,14 +317,15 @@ export default function EmployeeProfile() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {employee.certifications.map((cert) => (
+                      {profileData.certifications.map((cert) => (
                         <li key={cert} className="text-sm text-muted-foreground">
                           • {cert}
                         </li>
                       ))}
                     </ul>
                     <Button variant="ghost" size="sm" className="mt-4 text-primary">
-                      + Add Certification
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Certification
                     </Button>
                   </CardContent>
                 </Card>
@@ -229,6 +333,7 @@ export default function EmployeeProfile() {
             </div>
           </TabsContent>
 
+          {/* Private Info Tab */}
           <TabsContent value="private">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
@@ -238,31 +343,31 @@ export default function EmployeeProfile() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Date of Birth</Label>
-                    <Input type="date" defaultValue={employee.dateOfBirth} />
+                    <Input type="date" defaultValue={profileData.dateOfBirth} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Residing Address</Label>
-                    <Input defaultValue={employee.address} />
+                    <Input defaultValue={profileData.address} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Nationality</Label>
-                    <Input defaultValue={employee.nationality} />
+                    <Input defaultValue={profileData.nationality} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Personal Email</Label>
-                    <Input type="email" defaultValue={employee.personalEmail} />
+                    <Input type="email" defaultValue={profileData.personalEmail} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Gender</Label>
-                    <Input defaultValue={employee.gender} />
+                    <Input defaultValue={profileData.gender} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Marital Status</Label>
-                    <Input defaultValue={employee.maritalStatus} />
+                    <Input defaultValue={profileData.maritalStatus} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Date of Joining</Label>
-                    <Input type="date" defaultValue={employee.dateOfJoining} />
+                    <Input type="date" defaultValue={profileData.dateOfJoining} />
                   </div>
                 </CardContent>
               </Card>
@@ -274,35 +379,36 @@ export default function EmployeeProfile() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Account Number</Label>
-                    <Input defaultValue={employee.bankDetails.accountNumber} />
+                    <Input defaultValue={profileData.accountNumber} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Bank Name</Label>
-                    <Input defaultValue={employee.bankDetails.bankName} />
+                    <Input defaultValue={profileData.bankName} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">IFSC Code</Label>
-                    <Input defaultValue={employee.bankDetails.ifscCode} />
+                    <Input defaultValue={profileData.ifscCode} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">PAN No</Label>
-                    <Input defaultValue={employee.bankDetails.panNo} />
+                    <Input defaultValue={profileData.panNo} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">UAN NO</Label>
-                    <Input defaultValue={employee.bankDetails.uanNo} />
+                    <Input defaultValue={profileData.uanNo} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Emp Code</Label>
-                    <Input defaultValue={employee.bankDetails.empCode} />
+                    <Input defaultValue={profileData.empCode} />
                   </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
+          {/* Salary Info Tab */}
           <TabsContent value="salary">
-            <Card className="mb-6">
+            <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Salary Information</CardTitle>
@@ -311,48 +417,47 @@ export default function EmployeeProfile() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  The Salary Information tab allows users to define and manage all salary-related
+                  The Salary Information tab allows you to define and manage all salary-related
                   details for an employee, including wage type, working schedule, salary
-                  components, benefits. Salary components should be calculated automatically
-                  based on the defined Wage.
+                  components, and benefits.
                 </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {/* Wage Section */}
+                  {/* Wage Type */}
                   <div>
-                    <h3 className="text-sm font-medium mb-4">- Wage Type</h3>
+                    <h3 className="text-sm font-medium mb-4">Wage Type</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <Label className="text-sm mb-2 block">Month Wage</Label>
+                        <Label className="text-sm mb-2 block">Monthly Wage</Label>
                         <div className="flex gap-2 items-center">
                           <Input
                             type="number"
-                            defaultValue={employee.salary.monthlyWage}
+                            defaultValue={profileData.monthlyWage}
                             className="flex-1"
                           />
                           <span className="text-sm text-muted-foreground">/ Month</span>
                         </div>
                       </div>
                       <div>
-                        <Label className="text-sm mb-2 block">No of working days in a week:</Label>
-                        <Input type="number" defaultValue={employee.salary.workingDays} />
+                        <Label className="text-sm mb-2 block">Working Days per Week</Label>
+                        <Input type="number" defaultValue={profileData.workingDays} />
                       </div>
                       <div>
-                        <Label className="text-sm mb-2 block">Yearly wage</Label>
+                        <Label className="text-sm mb-2 block">Yearly Wage</Label>
                         <div className="flex gap-2 items-center">
                           <Input
                             type="number"
-                            defaultValue={employee.salary.yearlyWage}
+                            defaultValue={profileData.yearlyWage}
                             className="flex-1"
                           />
-                          <span className="text-sm text-muted-foreground">/ Yearly</span>
+                          <span className="text-sm text-muted-foreground">/ Year</span>
                         </div>
                       </div>
                       <div>
                         <Label className="text-sm mb-2 block">Break Time</Label>
                         <div className="flex gap-2 items-center">
-                          <Input defaultValue={employee.salary.breakTime} className="flex-1" />
+                          <Input defaultValue={profileData.breakTime} className="flex-1" />
                           <span className="text-sm text-muted-foreground">/ hrs</span>
                         </div>
                       </div>
@@ -361,180 +466,78 @@ export default function EmployeeProfile() {
 
                   {/* Salary Components */}
                   <div>
-                    <h3 className="text-sm font-medium mb-2">- Salary Components</h3>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Section where users can define salary structure components.
-                      <br />
-                      Each component should include:
-                      <br />
-                      Basic, House Rent Allowance, Standard Allowance, Performance Bonus, Leave
-                      Travel Allowance, Fixed Allowance
-                      <br />
-                      <br />
-                      Computation Type: Fixed Amount or Percentage of Wage
-                      <br />
-                      <br />
-                      Value: Percentage field (e.g., 50% for Basic, 50% of Basic for HRA, Standard
-                      Allowance 8.33%, Performance Bonus 4.17%, Leave Travel Allowance 4.17%,
-                      Fixed Allowance is = wage - total of all the component)
-                      <br />
-                      <br />
-                      Salary component values should auto-update when the wage amount changes.
-                      The total of all components should not exceed the defined Wage
-                    </p>
-
+                    <h3 className="text-sm font-medium mb-4">Salary Components</h3>
                     <div className="space-y-3 border rounded-lg p-4">
-                      {/* Basic Salary */}
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Default Base salary from company salary components</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            HRA provided for employees 50% of the salary
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Basic Salary</span>
+                          <p className="text-xs text-muted-foreground">50% of total salary</p>
                         </div>
                         <div className="col-span-3">
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              type="number"
-                              defaultValue={employee.salary.basic}
-                              className="text-right"
-                            />
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">₹ / month</span>
-                          </div>
+                          <Input type="number" defaultValue={profileData.basic} />
                         </div>
-                        <div className="col-span-2">
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              type="number"
-                              defaultValue="50.00"
-                              className="text-right"
-                            />
-                            <span className="text-xs text-muted-foreground">%</span>
-                          </div>
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="50.00" disabled />
                         </div>
                       </div>
-
-                      {/* House Rent Allowance */}
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">House Rent Allowance</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            HRA provided for employees 50% of the basic salary
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">House Rent Allowance</span>
+                          <p className="text-xs text-muted-foreground">25% of total salary</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.houseRentAllowance}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.hra} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="50.00"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="25.00" disabled />
                         </div>
                       </div>
-
-                      {/* Standard Allowance */}
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Standard Allowance</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            A standard allowance is a predetermined fixed amount provided to employee
-                            as part of their salary.
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Standard Allowance</span>
+                          <p className="text-xs text-muted-foreground">8.33% of total salary</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.standardAllowance}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.standardAllowance} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="8.33"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="8.33" disabled />
                         </div>
                       </div>
-
-                      {/* Performance Bonus */}
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Performance Bonus</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Variable amount paid during payroll. This value defined by the company and
-                            is 4.17% of the basic salary.
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Performance Bonus</span>
+                          <p className="text-xs text-muted-foreground">4.17% of total salary</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.performanceBonus}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.performanceBonus} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="4.17"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="4.17" disabled />
                         </div>
                       </div>
-
-                      {/* Leave Travel Allowance */}
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Leave Travel Allowance</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            LTA is paid by the company to employees to cover their travel expenses and
-                            calculated as 4.17% of the basic salary.
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Leave Travel Allowance</span>
+                          <p className="text-xs text-muted-foreground">4.17% of total salary</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.leaveTravel}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.lta} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="4.17"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="4.17" disabled />
                         </div>
                       </div>
-
-                      {/* Fixed Allowance */}
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Fixed Allowance</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Fixed allowance portion of wage is determined after calculating all salary
-                            components
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Fixed Allowance</span>
+                          <p className="text-xs text-muted-foreground">Remaining amount</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.fixedAllowance}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.fixedAllowance} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="5.83"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="5.83" disabled />
                         </div>
                       </div>
                     </div>
@@ -542,122 +545,92 @@ export default function EmployeeProfile() {
 
                   {/* PF Contribution */}
                   <div>
-                    <h3 className="text-sm font-medium mb-4">
-                      - Provident Fund (PF) Contribution
-                    </h3>
+                    <h3 className="text-sm font-medium mb-4">Provident Fund (PF) Contribution</h3>
                     <div className="space-y-3 border rounded-lg p-4">
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Employee</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            PF is calculated based on the basic salary
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Employee Contribution</span>
+                          <p className="text-xs text-muted-foreground">12% of basic salary</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.pfEmployee}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.pfEmployee} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="12.00"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="12.00" disabled />
                         </div>
                       </div>
-
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Employer</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            PF is calculated based on the basic salary
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Employer Contribution</span>
+                          <p className="text-xs text-muted-foreground">12% of basic salary</p>
                         </div>
                         <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.pfEmployer}
-                            className="text-right"
-                          />
+                          <Input type="number" defaultValue={profileData.pfEmployer} />
                         </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            defaultValue="12.00"
-                            className="text-right"
-                          />
+                        <div className="col-span-3">
+                          <Input type="number" defaultValue="12.00" disabled />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Tax Deductions */}
+                  {/* Professional Tax */}
                   <div>
-                    <h3 className="text-sm font-medium mb-4">- Tax Deductions</h3>
-                    <div className="space-y-3 border rounded-lg p-4">
+                    <h3 className="text-sm font-medium mb-4">Professional Tax</h3>
+                    <div className="border rounded-lg p-4">
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <span className="text-sm">Professional Tax</span>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Professional Tax deducted from the Gross Salary
-                          </p>
+                        <div className="col-span-6">
+                          <span className="text-sm font-medium">Monthly Professional Tax</span>
                         </div>
-                        <div className="col-span-3">
-                          <Input
-                            type="number"
-                            defaultValue={employee.salary.professionalTax}
-                            className="text-right"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-sm text-muted-foreground">Fixed: 200</span>
+                        <div className="col-span-6">
+                          <Input type="number" defaultValue={profileData.professionalTax} />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Automatic Calculation Note */}
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-medium mb-2">- Automatic Calculation:</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      The system should calculate each component amount based on the employee's
-                      defined Wage.
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-2">Example:</p>
-                    <p className="text-sm text-muted-foreground">
-                      If Wage = 750,000 and Basic = 50% of wage, then Basic = 125,000.
-                      <br />
-                      If HRA = 50% of Basic, then HRA = 112,500.
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-4">
-                      Each fields for configuration (e.g., PF rate 12%).
-                      <br />
-                      and Professional Tax 200
-                    </p>
+                  <div className="flex justify-end">
+                    <Button>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Salary Information
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="security">
-            <Card className="max-w-md">
+          {/* HR Settings Tab */}
+          <TabsContent value="settings">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Security Settings</CardTitle>
+                <CardTitle className="text-lg">HR Settings</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full justify-start">
-                  Change Password
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Two-Factor Authentication
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Login History
-                </Button>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Employee Status</Label>
+                    <Input defaultValue="Active" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Reporting Manager</Label>
+                    <Input defaultValue="Sarah Williams" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Work Location</Label>
+                    <Input defaultValue={user.location || "Office"} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Employment Type</Label>
+                    <Input defaultValue="Full-time" />
+                  </div>
+                  <div className="flex justify-end mt-6">
+                    <Button>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Settings
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

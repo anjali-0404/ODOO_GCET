@@ -21,9 +21,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Check, X } from "lucide-react";
+import { Plus, Search, Check, X, Upload, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 type LeaveStatus = "pending" | "approved" | "rejected";
 type LeaveType = "Paid Time Off" | "Sick Leave" | "Unpaid Leave";
@@ -35,23 +43,9 @@ interface TimeOffRequest {
   startDate: string;
   endDate: string;
   status: LeaveStatus;
-  allocation?: number;
+  allocation: number;
+  attachment?: string;
 }
-
-// Mock data - expanded for different users
-const mockTimeOffRequests: TimeOffRequest[] = [
-  { id: "1", employee: "John Doe", type: "Paid Time Off", startDate: "2025-10-28", endDate: "2025-10-28", status: "pending" },
-  { id: "2", employee: "Jane Smith", type: "Sick Leave", startDate: "2025-10-25", endDate: "2025-10-26", status: "approved" },
-  { id: "3", employee: "Mike Johnson", type: "Paid Time Off", startDate: "2025-10-20", endDate: "2025-10-22", status: "approved" },
-  { id: "4", employee: "Sarah Johnson", type: "Paid Time Off", startDate: "2026-01-15", endDate: "2026-01-17", status: "pending" },
-  { id: "5", employee: "Sarah Johnson", type: "Sick Leave", startDate: "2025-12-10", endDate: "2025-12-11", status: "approved" },
-  { id: "6", employee: "Sarah Johnson", type: "Paid Time Off", startDate: "2025-11-20", endDate: "2025-11-22", status: "rejected" },
-];
-
-const leaveBalances = {
-  "Paid Time Off": { available: 24, total: 30 },
-  "Sick Leave": { available: 7, total: 10 },
-};
 
 const statusColors: Record<LeaveStatus, string> = {
   pending: "bg-warning/10 text-warning border-warning/20",
@@ -59,14 +53,24 @@ const statusColors: Record<LeaveStatus, string> = {
   rejected: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
+const leaveTypes: LeaveType[] = ["Paid Time Off", "Sick Leave", "Unpaid Leave"];
+
 export default function TimeOff() {
   const { user, role } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests, setRequests] = useState(mockTimeOffRequests);
+  const [requests, setRequests] = useState<TimeOffRequest[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  // Form state
+  const [leaveType, setLeaveType] = useState<LeaveType>("Paid Time Off");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [allocation, setAllocation] = useState("");
 
   // Check if user is HR
-  const isHROrAdmin = role === "hr";
+  const isHROrAdmin = role === "hr" || role === "admin";
 
   // Filter requests based on role
   const userRequests = isHROrAdmin 
@@ -78,16 +82,87 @@ export default function TimeOff() {
     request.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select a file smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+      toast({
+        title: "File selected",
+        description: `${file.name} is ready to upload`,
+      });
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!user || !startDate || !endDate || !allocation) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Calculate days between dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    const newRequest: TimeOffRequest = {
+      id: Date.now().toString(),
+      employee: user.name,
+      type: leaveType,
+      startDate,
+      endDate,
+      status: "pending",
+      allocation: parseFloat(allocation),
+      attachment: selectedFile?.name,
+    };
+
+    setRequests(prev => [newRequest, ...prev]);
+    
+    toast({
+      title: "Request submitted",
+      description: `Your ${leaveType} request has been submitted successfully`,
+    });
+
+    // Reset form
+    setLeaveType("Paid Time Off");
+    setStartDate("");
+    setEndDate("");
+    setAllocation("");
+    setSelectedFile(null);
+    setIsDialogOpen(false);
+  };
+
   const handleApprove = (id: string) => {
     setRequests(prev =>
       prev.map(req => (req.id === id ? { ...req, status: "approved" as LeaveStatus } : req))
     );
+    toast({
+      title: "Request approved",
+      description: "Time off request has been approved",
+    });
   };
 
   const handleReject = (id: string) => {
     setRequests(prev =>
       prev.map(req => (req.id === id ? { ...req, status: "rejected" as LeaveStatus } : req))
     );
+    toast({
+      title: "Request rejected",
+      description: "Time off request has been rejected",
+      variant: "destructive",
+    });
   };
 
   return (
@@ -96,24 +171,31 @@ export default function TimeOff() {
 
       <main className="container mx-auto px-4 py-6">
         {/* Leave balances */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-primary font-medium">Paid Time Off</p>
-                  <p className="text-2xl font-bold">{leaveBalances["Paid Time Off"].available} Days available</p>
-                </div>
+              <div>
+                <p className="text-sm text-primary font-medium">Paid Time Off</p>
+                <p className="text-2xl font-bold">24 Days available</p>
+                <p className="text-xs text-muted-foreground">Out of 30 days total</p>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-primary font-medium">Sick Leave</p>
-                  <p className="text-2xl font-bold">{leaveBalances["Sick Leave"].available} Days available</p>
-                </div>
+              <div>
+                <p className="text-sm text-primary font-medium">Sick Leave</p>
+                <p className="text-2xl font-bold">7 Days available</p>
+                <p className="text-xs text-muted-foreground">Out of 10 days total</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div>
+                <p className="text-sm text-primary font-medium">Unpaid Leave</p>
+                <p className="text-2xl font-bold">Unlimited</p>
+                <p className="text-xs text-muted-foreground">No limit</p>
               </div>
             </CardContent>
           </Card>
@@ -131,10 +213,10 @@ export default function TimeOff() {
                   <DialogTrigger asChild>
                     <Button size="sm">
                       <Plus className="h-4 w-4 mr-2" />
-                      NEW
+                      New Request
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>Time Off Type Request</DialogTitle>
                       <DialogDescription>
@@ -144,44 +226,105 @@ export default function TimeOff() {
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label>Employee</Label>
-                        <Input placeholder="Select employee" disabled value={user?.name || "Employee"} />
+                        <Input disabled value={user?.name || "Employee"} />
                       </div>
                       <div className="space-y-2">
                         <Label>Time Off Type</Label>
-                        <Input placeholder="Paid Time Off" />
+                        <Select value={leaveType} onValueChange={(value) => setLeaveType(value as LeaveType)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select leave type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {leaveTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>From</Label>
-                          <Input type="date" />
+                          <Input 
+                            type="date" 
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label>To</Label>
-                          <Input type="date" />
+                          <Input 
+                            type="date" 
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                          />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Allocation</Label>
                         <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="01.00" className="w-24" />
+                          <Input 
+                            type="number" 
+                            placeholder="6" 
+                            className="w-24"
+                            value={allocation}
+                            onChange={(e) => setAllocation(e.target.value)}
+                          />
                           <span className="text-muted-foreground">Days</span>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Attachment</Label>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            Upload
-                          </Button>
-                          <span className="text-xs text-muted-foreground">(For sick leave certificate)</span>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="file"
+                              id="file-upload"
+                              className="hidden"
+                              onChange={handleFileChange}
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById('file-upload')?.click()}
+                              type="button"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              (For sick leave certificate)
+                            </span>
+                          </div>
+                          {selectedFile && (
+                            <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                              <FileText className="h-4 w-4 text-primary" />
+                              <span className="text-sm flex-1 truncate">{selectedFile.name}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedFile(null)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          setSelectedFile(null);
+                        }}
+                      >
                         Discard
                       </Button>
-                      <Button onClick={() => setIsDialogOpen(false)}>Submit</Button>
+                      <Button onClick={handleSubmit}>Submit</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -201,68 +344,84 @@ export default function TimeOff() {
           </CardHeader>
 
           <CardContent>
-            <div className="rounded-md border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    {isHROrAdmin && <TableHead>Name</TableHead>}
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Time Off Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    {isHROrAdmin && <TableHead className="text-right">Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      {isHROrAdmin && <TableCell className="font-medium">{request.employee}</TableCell>}
-                      <TableCell>{new Date(request.startDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(request.endDate).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <span className="text-primary">{request.type}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={statusColors[request.status]}>
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      {isHROrAdmin && (
-                        <TableCell className="text-right">
-                          {request.status === "pending" && (
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleReject(request.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
-                                onClick={() => handleApprove(request.id)}
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
+            {filteredRequests.length > 0 ? (
+              <div className="rounded-md border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      {isHROrAdmin && <TableHead>Employee</TableHead>}
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Days</TableHead>
+                      <TableHead>Attachment</TableHead>
+                      <TableHead>Status</TableHead>
+                      {isHROrAdmin && <TableHead className="text-right">Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRequests.map((request) => (
+                      <TableRow key={request.id}>
+                        {isHROrAdmin && <TableCell className="font-medium">{request.employee}</TableCell>}
+                        <TableCell>{new Date(request.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(request.endDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <span className="text-primary">{request.type}</span>
+                        </TableCell>
+                        <TableCell>{request.allocation} days</TableCell>
+                        <TableCell>
+                          {request.attachment ? (
+                            <div className="flex items-center gap-1">
+                              <FileText className="h-4 w-4 text-primary" />
+                              <span className="text-xs truncate max-w-[100px]">{request.attachment}</span>
                             </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">No file</span>
                           )}
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {filteredRequests.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
+                        <TableCell>
+                          <Badge variant="outline" className={statusColors[request.status]}>
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        {isHROrAdmin && (
+                          <TableCell className="text-right">
+                            {request.status === "pending" && (
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleReject(request.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
+                                  onClick={() => handleApprove(request.id)}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-12 border rounded-lg bg-muted/20">
+                <p className="text-muted-foreground mb-2">
                   {isHROrAdmin 
                     ? "No time off requests found." 
                     : "You haven't submitted any time off requests yet."}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Click the "New Request" button above to submit a time off request.
                 </p>
               </div>
             )}

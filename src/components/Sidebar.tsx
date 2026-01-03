@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
 import {
   LayoutDashboard,
   Calendar,
@@ -49,12 +49,10 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Logo */}
       <div className="p-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center">
-            <span className="text-white text-lg">☀️</span>
-          </div>
+          <img src={odooLogo} alt="odoo" className="h-8" />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sidebar-foreground">Synergy</span>
+              <span className="font-semibold text-sidebar-foreground">odoo</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
             <span className="text-xs text-muted-foreground">HR Management</span>

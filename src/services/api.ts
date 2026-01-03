@@ -175,6 +175,13 @@ class ApiService {
   async getUser(id: number) {
     return this.request(`/users/${id}`);
   }
+
+  async updateUser(id: number, userData: any) {
+    return this.request(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
 }
 
 export const api = new ApiService();

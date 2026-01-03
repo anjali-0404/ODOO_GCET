@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
 import {
   Users,
   Clock,
@@ -25,7 +25,7 @@ export function DashboardHeader() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={dayflowLogo} alt="Dayflow" className="h-6 invert" />
+            <img src={odooLogo} alt="odoo" className="h-8" />
           </Link>
 
           {/* Navigation */}
