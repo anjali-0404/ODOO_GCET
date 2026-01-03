@@ -1,98 +1,156 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Pin, Trash2, Edit, MoreVertical, StickyNote } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Plus, Search, Pin, Trash2, Edit, StickyNote, Save } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/services/api";
 
 interface Note {
-  id: string;
+  id: number;
   title: string;
   content: string;
   category: string;
-  isPinned: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
   color: string;
 }
 
-const mockNotes: Note[] = [
-  {
-    id: "1",
-    title: "Q1 Goals",
-    content: "1. Increase team productivity by 20%\n2. Launch new product features\n3. Improve customer satisfaction scores\n4. Reduce technical debt",
-    category: "Work",
-    isPinned: true,
-    createdAt: "2026-01-01",
-    updatedAt: "2026-01-02",
-    color: "bg-yellow-100",
-  },
-  {
-    id: "2",
-    title: "Meeting Notes - Jan 3",
-    content: "Team standup discussion:\n- Website redesign progress on track\n- Mobile app development needs more resources\n- Security audit completed successfully",
-    category: "Meetings",
-    isPinned: true,
-    createdAt: "2026-01-03",
-    updatedAt: "2026-01-03",
-    color: "bg-blue-100",
-  },
-  {
-    id: "3",
-    title: "Employee Feedback Ideas",
-    content: "Ideas for improving employee engagement:\n- Monthly team building activities\n- Flexible work hours\n- Professional development budget\n- Recognition program",
-    category: "HR",
-    isPinned: false,
-    createdAt: "2025-12-28",
-    updatedAt: "2025-12-30",
-    color: "bg-green-100",
-  },
-  {
-    id: "4",
-    title: "Project Deadlines",
-    content: "Important deadlines:\n- Website redesign: March 15\n- Mobile app beta: April 30\n- HR system integration: January 31\n- Security patches: January 15",
-    category: "Work",
-    isPinned: false,
-    createdAt: "2026-01-01",
-    updatedAt: "2026-01-02",
-    color: "bg-red-100",
-  },
-  {
-    id: "5",
-    title: "Training Resources",
-    content: "Useful resources for team development:\n- React documentation\n- TypeScript handbook\n- AWS certification materials\n- Leadership courses on Udemy",
-    category: "Learning",
-    isPinned: false,
-    createdAt: "2025-12-20",
-    updatedAt: "2025-12-25",
-    color: "bg-purple-100",
-  },
-  {
-    id: "6",
-    title: "Office Supplies Needed",
-    content: "Items to order:\n- Whiteboard markers\n- Sticky notes\n- Printer paper\n- Coffee for break room\n- Standing desks (2)",
-    category: "Admin",
-    isPinned: false,
-    createdAt: "2025-12-15",
-    updatedAt: "2026-01-02",
-    color: "bg-orange-100",
-  },
+const colorOptions = [
+  { value: "bg-yellow-100", label: "Yellow" },
+  { value: "bg-blue-100", label: "Blue" },
+  { value: "bg-green-100", label: "Green" },
+  { value: "bg-red-100", label: "Red" },
+  { value: "bg-purple-100", label: "Purple" },
+  { value: "bg-orange-100", label: "Orange" },
 ];
 
 export default function Notes() {
+  const [notes, setNotes] = useState<Note[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [notes, setNotes] = useState(mockNotes);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+    category: "Work",
+    color: "bg-yellow-100",
+  });
+  const { toast } = useToast();
 
-  const categories = ["all", ...Array.from(new Set(mockNotes.map(n => n.category)))];
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  const fetchNotes = async () => {
+    try {
+      const data = await api.getNotes();
+      setNotes(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch notes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateNote = async () => {
+    try {
+      await api.createNote(formData);
+      toast({
+        title: "Success",
+        description: "Note created successfully",
+      });
+      setIsDialogOpen(false);
+      setFormData({ title: "", content: "", category: "Work", color: "bg-yellow-100" });
+      fetchNotes();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateNote = async () => {
+    if (!editingNote) return;
+    try {
+      await api.updateNote(editingNote.id, formData);
+      toast({
+        title: "Success",
+        description: "Note updated successfully",
+      });
+      setIsDialogOpen(false);
+      setEditingNote(null);
+      setFormData({ title: "", content: "", category: "Work", color: "bg-yellow-100" });
+      fetchNotes();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const togglePin = async (id: number) => {
+    try {
+      await api.togglePinNote(id);
+      fetchNotes();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to toggle pin",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteNote = async (id: number) => {
+    try {
+      await api.deleteNote(id);
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      });
+      fetchNotes();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditDialog = (note: Note) => {
+    setEditingNote(note);
+    setFormData({
+      title: note.title,
+      content: note.content,
+      category: note.category,
+      color: note.color,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const openCreateDialog = () => {
+    setEditingNote(null);
+    setFormData({ title: "", content: "", category: "Work", color: "bg-yellow-100" });
+    setIsDialogOpen(true);
+  };
+
+  const categories = ["all", ...Array.from(new Set(notes.map(n => n.category)))];
 
   const filteredNotes = notes.filter((note) => {
     const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -101,18 +159,8 @@ export default function Notes() {
     return matchesSearch && matchesCategory;
   });
 
-  const pinnedNotes = filteredNotes.filter(note => note.isPinned);
-  const regularNotes = filteredNotes.filter(note => !note.isPinned);
-
-  const togglePin = (noteId: string) => {
-    setNotes(notes.map(note =>
-      note.id === noteId ? { ...note, isPinned: !note.isPinned } : note
-    ));
-  };
-
-  const deleteNote = (noteId: string) => {
-    setNotes(notes.filter(note => note.id !== noteId));
-  };
+  const pinnedNotes = filteredNotes.filter(note => note.is_pinned);
+  const regularNotes = filteredNotes.filter(note => !note.is_pinned);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -131,25 +179,24 @@ export default function Notes() {
               className="h-7 w-7"
               onClick={() => togglePin(note.id)}
             >
-              <Pin className={`h-4 w-4 ${note.isPinned ? 'fill-current' : ''}`} />
+              <Pin className={`h-4 w-4 ${note.is_pinned ? 'fill-current' : ''}`} />
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => deleteNote(note.id)} className="text-red-600">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => openEditDialog(note)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-red-600"
+              onClick={() => deleteNote(note.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         <Badge variant="secondary" className="w-fit">{note.category}</Badge>
@@ -159,7 +206,7 @@ export default function Notes() {
           {note.content}
         </p>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Updated {formatDate(note.updatedAt)}</span>
+          <span>Updated {formatDate(note.updated_at)}</span>
         </div>
       </CardContent>
     </Card>
@@ -168,19 +215,17 @@ export default function Notes() {
   return (
     <DashboardLayout>
       <div className="p-6">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Notes</h1>
             <p className="text-muted-foreground">Capture and organize your thoughts</p>
           </div>
-          <Button>
+          <Button onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />
             New Note
           </Button>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
@@ -196,7 +241,7 @@ export default function Notes() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">
-                {notes.filter(n => n.isPinned).length}
+                {notes.filter(n => n.is_pinned).length}
               </div>
             </CardContent>
           </Card>
@@ -212,7 +257,6 @@ export default function Notes() {
           </Card>
         </div>
 
-        {/* Search and Filter */}
         <div className="flex gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -237,7 +281,6 @@ export default function Notes() {
           </div>
         </div>
 
-        {/* Pinned Notes */}
         {pinnedNotes.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -252,7 +295,6 @@ export default function Notes() {
           </div>
         )}
 
-        {/* Regular Notes */}
         {regularNotes.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">All Notes</h2>
@@ -268,12 +310,79 @@ export default function Notes() {
           <div className="text-center py-12">
             <StickyNote className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No notes found</p>
-            <Button className="mt-4">
+            <Button className="mt-4" onClick={openCreateDialog}>
               <Plus className="mr-2 h-4 w-4" />
               Create your first note
             </Button>
           </div>
         )}
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingNote ? "Edit Note" : "Create New Note"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Enter note title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder="Enter note content"
+                  rows={6}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="Work, Personal, etc."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="color">Color</Label>
+                  <Select value={formData.color} onValueChange={(value) => setFormData({ ...formData, color: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colorOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded ${option.value}`} />
+                            {option.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={editingNote ? handleUpdateNote : handleCreateNote}>
+                <Save className="mr-2 h-4 w-4" />
+                {editingNote ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
