@@ -12,6 +12,12 @@ import Employees from "./pages/Employees";
 import EmployeeProfile from "./pages/EmployeeProfile";
 import Attendance from "./pages/Attendance";
 import TimeOff from "./pages/TimeOff";
+import Calendar from "./pages/Calendar";
+import Projects from "./pages/Projects";
+import Team from "./pages/Team";
+import Notes from "./pages/Notes";
+import Benefits from "./pages/Benefits";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,7 +38,13 @@ const App = () => (
             <Route path="/dashboard/employee/:id" element={<EmployeeProfile />} />
             <Route path="/dashboard/profile" element={<EmployeeProfile />} />
             <Route path="/dashboard/attendance" element={<Attendance />} />
+            <Route path="/dashboard/calendar" element={<Calendar />} />
             <Route path="/dashboard/time-off" element={<TimeOff />} />
+            <Route path="/dashboard/projects" element={<Projects />} />
+            <Route path="/dashboard/team" element={<Team />} />
+            <Route path="/dashboard/notes" element={<Notes />} />
+            <Route path="/dashboard/benefits" element={<Benefits />} />
+            <Route path="/dashboard/documents" element={<Documents />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
