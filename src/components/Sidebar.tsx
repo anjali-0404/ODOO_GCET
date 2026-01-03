@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
 import {
   LayoutDashboard,
   Calendar,
@@ -13,21 +13,15 @@ import {
   Settings,
   HelpCircle,
   ChevronDown,
-<<<<<<< HEAD
-=======
   Clock,
   UsersRound,
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 } from "lucide-react";
 import { UserProfileDropdown } from "./UserProfileDropdown";
 
 const mainNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-<<<<<<< HEAD
-=======
   { label: "Employees", href: "/dashboard/employees", icon: UsersRound },
   { label: "Attendance", href: "/dashboard/attendance", icon: Clock },
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
   { label: "Time Off", href: "/dashboard/time-off", icon: CalendarOff },
   { label: "Projects", href: "/dashboard/projects", icon: FolderKanban },
@@ -55,12 +49,10 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Logo */}
       <div className="p-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center">
-            <span className="text-white text-lg">☀️</span>
-          </div>
+          <img src={odooLogo} alt="odoo" className="h-8" />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sidebar-foreground">Synergy</span>
+              <span className="font-semibold text-sidebar-foreground">odoo</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
             <span className="text-xs text-muted-foreground">HR Management</span>

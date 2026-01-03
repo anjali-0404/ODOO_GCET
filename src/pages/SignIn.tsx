@@ -12,50 +12,32 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState } from "react";
-<<<<<<< HEAD
-import { Mail, Lock } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
-=======
 import { Mail, Lock, Users, Briefcase } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 interface SignInFormData {
   loginId: string;
   password: string;
-<<<<<<< HEAD
-=======
   role: UserRole;
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 }
 
 interface FormErrors {
   loginId?: string;
   password?: string;
-<<<<<<< HEAD
-=======
   role?: string;
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   general?: string;
 }
 
 const SignIn = () => {
   const navigate = useNavigate();
-<<<<<<< HEAD
-  const [formData, setFormData] = useState<SignInFormData>({
-    loginId: "",
-    password: "",
-=======
   const { signIn } = useAuth();
   const [formData, setFormData] = useState<SignInFormData>({
     loginId: "",
     password: "",
     role: "employee",
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -100,12 +82,7 @@ const SignIn = () => {
     setErrors({});
 
     try {
-<<<<<<< HEAD
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-=======
       await signIn(formData.loginId, formData.password, formData.role);
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
       // Navigate to dashboard on success
       navigate("/dashboard");
     } catch {
@@ -122,7 +99,7 @@ const SignIn = () => {
       <Card className="w-full max-w-sm mx-auto">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={dayflowLogo} alt="Dayflow" className="h-8 invert" />
+            <img src={odooLogo} alt="odoo" className="h-12" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
@@ -140,8 +117,6 @@ const SignIn = () => {
               </div>
             )}
 
-<<<<<<< HEAD
-=======
             {/* Role Selection */}
             <div className="flex flex-col gap-2">
               <Label>Sign in as</Label>
@@ -177,7 +152,6 @@ const SignIn = () => {
               </div>
             </div>
 
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
             <div className="flex flex-col gap-2">
               <Label htmlFor="loginId">Login ID / Email</Label>
               <Input

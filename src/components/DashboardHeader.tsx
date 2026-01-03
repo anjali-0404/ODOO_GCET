@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
 import {
   Users,
   Clock,
@@ -8,10 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 import { UserProfileDropdown } from "./UserProfileDropdown";
-<<<<<<< HEAD
-=======
 import { NotificationDropdown } from "./NotificationDropdown";
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 const navItems = [
   { label: "Employees", href: "/dashboard", icon: Users },
@@ -28,7 +25,7 @@ export function DashboardHeader() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={dayflowLogo} alt="Dayflow" className="h-6 invert" />
+            <img src={odooLogo} alt="odoo" className="h-8" />
           </Link>
 
           {/* Navigation */}
@@ -56,18 +53,11 @@ export function DashboardHeader() {
           </nav>
 
           {/* Right side actions */}
-<<<<<<< HEAD
-          <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard/settings"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-=======
           <div className="flex items-center gap-2">
             <NotificationDropdown />
             <Link
               to="/dashboard/settings"
               className="text-muted-foreground hover:text-foreground transition-colors p-2"
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
             >
               <Settings className="h-5 w-5" />
             </Link>
