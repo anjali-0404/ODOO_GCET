@@ -30,6 +30,11 @@ app.use('/api/time-off', timeOffRoutes);
 app.use('/api/benefits', benefitsRoutes);
 app.use('/api/users', usersRoutes);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'API Server - DAYFLOW HR Management System', version: '1.0.0' });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
