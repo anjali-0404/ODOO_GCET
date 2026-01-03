@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+<<<<<<< HEAD
+=======
+import { CheckInOutCard } from "@/components/CheckInOutCard";
+import { useAuth } from "@/contexts/AuthContext";
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 import { 
   Search, 
   Bell, 
@@ -13,13 +18,19 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+<<<<<<< HEAD
   MapPin,
+=======
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   Zap,
   StickyNote,
   Users,
   Filter
 } from "lucide-react";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
+=======
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 // Mock data
 const timeOffRequests = [
@@ -52,7 +63,11 @@ const notes = [
 ];
 
 export default function Dashboard() {
+<<<<<<< HEAD
   const navigate = useNavigate();
+=======
+  const { user, role } = useAuth();
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   const [currentDate] = useState(new Date(2023, 7, 2)); // Aug 2, 2023
   const totalTimeOff = 20;
   const usedTimeOff = 16;
@@ -64,12 +79,21 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12">
+<<<<<<< HEAD
               <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" />
               <AvatarFallback>SW</AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-2xl font-semibold">Sophia Williams</h1>
               <p className="text-muted-foreground">Welcome back to Synergy 👋</p>
+=======
+              <AvatarImage src={user?.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"} />
+              <AvatarFallback>{user?.name?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-2xl font-semibold">{user?.name || "User"}</h1>
+              <p className="text-muted-foreground">Welcome back to DAYFLOW 👋</p>
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -94,6 +118,12 @@ export default function Dashboard() {
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
+<<<<<<< HEAD
+=======
+            {/* Check In/Out Card */}
+            <CheckInOutCard />
+            
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
             {/* Time Off Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -364,7 +394,11 @@ export default function Dashboard() {
                   ].map((d) => (
                     <div 
                       key={d.date}
+<<<<<<< HEAD
                       className={`text-center py-2 rounded-lg ${
+=======
+                      className={`text-center py-2 rounded-lg cursor-pointer ${
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                         d.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                       }`}
                     >
@@ -376,7 +410,14 @@ export default function Dashboard() {
 
                 {/* Search */}
                 <div className="flex gap-2 mb-4">
+<<<<<<< HEAD
                   <Input placeholder="Search..." leftIcon={<Search className="h-4 w-4" />} className="flex-1" />
+=======
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Search..." className="pl-9" />
+                  </div>
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                   <Button variant="outline" size="icon">
                     <Filter className="h-4 w-4" />
                   </Button>

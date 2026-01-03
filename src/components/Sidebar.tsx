@@ -13,11 +13,21 @@ import {
   Settings,
   HelpCircle,
   ChevronDown,
+<<<<<<< HEAD
+=======
+  Clock,
+  UsersRound,
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 } from "lucide-react";
 import { UserProfileDropdown } from "./UserProfileDropdown";
 
 const mainNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+<<<<<<< HEAD
+=======
+  { label: "Employees", href: "/dashboard/employees", icon: UsersRound },
+  { label: "Attendance", href: "/dashboard/attendance", icon: Clock },
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
   { label: "Time Off", href: "/dashboard/time-off", icon: CalendarOff },
   { label: "Projects", href: "/dashboard/projects", icon: FolderKanban },

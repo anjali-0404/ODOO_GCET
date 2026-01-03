@@ -12,26 +12,50 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState } from "react";
+<<<<<<< HEAD
 import { Mail, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import dayflowLogo from "@/assets/dayflow-logo.svg";
+=======
+import { Mail, Lock, Users, Briefcase } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import dayflowLogo from "@/assets/dayflow-logo.svg";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 interface SignInFormData {
   loginId: string;
   password: string;
+<<<<<<< HEAD
+=======
+  role: UserRole;
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 }
 
 interface FormErrors {
   loginId?: string;
   password?: string;
+<<<<<<< HEAD
+=======
+  role?: string;
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   general?: string;
 }
 
 const SignIn = () => {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const [formData, setFormData] = useState<SignInFormData>({
     loginId: "",
     password: "",
+=======
+  const { signIn } = useAuth();
+  const [formData, setFormData] = useState<SignInFormData>({
+    loginId: "",
+    password: "",
+    role: "employee",
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -76,8 +100,12 @@ const SignIn = () => {
     setErrors({});
 
     try {
+<<<<<<< HEAD
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
+=======
+      await signIn(formData.loginId, formData.password, formData.role);
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
       // Navigate to dashboard on success
       navigate("/dashboard");
     } catch {
@@ -112,6 +140,44 @@ const SignIn = () => {
               </div>
             )}
 
+<<<<<<< HEAD
+=======
+            {/* Role Selection */}
+            <div className="flex flex-col gap-2">
+              <Label>Sign in as</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleInputChange("role", "employee")}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
+                    formData.role === "employee"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  )}
+                  disabled={isLoading}
+                >
+                  <Users className="h-6 w-6" />
+                  <span className="text-sm font-medium">Employee</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange("role", "hr")}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
+                    formData.role === "hr"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  )}
+                  disabled={isLoading}
+                >
+                  <Briefcase className="h-6 w-6" />
+                  <span className="text-sm font-medium">HR Manager</span>
+                </button>
+              </div>
+            </div>
+
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
             <div className="flex flex-col gap-2">
               <Label htmlFor="loginId">Login ID / Email</Label>
               <Input

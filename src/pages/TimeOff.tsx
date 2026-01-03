@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Check, X } from "lucide-react";
+<<<<<<< HEAD
+=======
+import { useAuth } from "@/contexts/AuthContext";
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 type LeaveStatus = "pending" | "approved" | "rejected";
 type LeaveType = "Paid Time Off" | "Sick Leave" | "Unpaid Leave";
@@ -37,11 +41,21 @@ interface TimeOffRequest {
   allocation?: number;
 }
 
+<<<<<<< HEAD
 // Mock data
+=======
+// Mock data - expanded for different users
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 const mockTimeOffRequests: TimeOffRequest[] = [
   { id: "1", employee: "John Doe", type: "Paid Time Off", startDate: "2025-10-28", endDate: "2025-10-28", status: "pending" },
   { id: "2", employee: "Jane Smith", type: "Sick Leave", startDate: "2025-10-25", endDate: "2025-10-26", status: "approved" },
   { id: "3", employee: "Mike Johnson", type: "Paid Time Off", startDate: "2025-10-20", endDate: "2025-10-22", status: "approved" },
+<<<<<<< HEAD
+=======
+  { id: "4", employee: "Sarah Johnson", type: "Paid Time Off", startDate: "2026-01-15", endDate: "2026-01-17", status: "pending" },
+  { id: "5", employee: "Sarah Johnson", type: "Sick Leave", startDate: "2025-12-10", endDate: "2025-12-11", status: "approved" },
+  { id: "6", employee: "Sarah Johnson", type: "Paid Time Off", startDate: "2025-11-20", endDate: "2025-11-22", status: "rejected" },
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 ];
 
 const leaveBalances = {
@@ -56,11 +70,27 @@ const statusColors: Record<LeaveStatus, string> = {
 };
 
 export default function TimeOff() {
+<<<<<<< HEAD
+=======
+  const { user, role } = useAuth();
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState(mockTimeOffRequests);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+<<<<<<< HEAD
   const filteredRequests = requests.filter((request) =>
+=======
+  // Check if user is HR
+  const isHROrAdmin = role === "hr";
+
+  // Filter requests based on role
+  const userRequests = isHROrAdmin 
+    ? requests 
+    : requests.filter(req => req.employee === user?.name);
+
+  const filteredRequests = userRequests.filter((request) =>
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
     request.employee.toLowerCase().includes(searchQuery.toLowerCase()) ||
     request.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -111,7 +141,13 @@ export default function TimeOff() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
+<<<<<<< HEAD
                 <CardTitle className="text-xl">Time Off</CardTitle>
+=======
+                <CardTitle className="text-xl">
+                  {isHROrAdmin ? "All Time Off Requests" : "My Time Off Requests"}
+                </CardTitle>
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm">
@@ -129,7 +165,11 @@ export default function TimeOff() {
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label>Employee</Label>
+<<<<<<< HEAD
                         <Input placeholder="Select employee" disabled value="John Doe" />
+=======
+                        <Input placeholder="Select employee" disabled value={user?.name || "Employee"} />
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                       </div>
                       <div className="space-y-2">
                         <Label>Time Off Type</Label>
@@ -171,6 +211,7 @@ export default function TimeOff() {
                   </DialogContent>
                 </Dialog>
               </div>
+<<<<<<< HEAD
               <div className="relative w-64">
                 <Input
                   placeholder="Search requests..."
@@ -181,6 +222,19 @@ export default function TimeOff() {
                   onClear={() => setSearchQuery("")}
                 />
               </div>
+=======
+              {isHROrAdmin && (
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search requests..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              )}
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
             </div>
           </CardHeader>
 
@@ -189,18 +243,30 @@ export default function TimeOff() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
+<<<<<<< HEAD
                     <TableHead>Name</TableHead>
+=======
+                    {isHROrAdmin && <TableHead>Name</TableHead>}
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                     <TableHead>Start Date</TableHead>
                     <TableHead>End Date</TableHead>
                     <TableHead>Time Off Type</TableHead>
                     <TableHead>Status</TableHead>
+<<<<<<< HEAD
                     <TableHead className="text-right">Actions</TableHead>
+=======
+                    {isHROrAdmin && <TableHead className="text-right">Actions</TableHead>}
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredRequests.map((request) => (
                     <TableRow key={request.id}>
+<<<<<<< HEAD
                       <TableCell className="font-medium">{request.employee}</TableCell>
+=======
+                      {isHROrAdmin && <TableCell className="font-medium">{request.employee}</TableCell>}
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                       <TableCell>{new Date(request.startDate).toLocaleDateString()}</TableCell>
                       <TableCell>{new Date(request.endDate).toLocaleDateString()}</TableCell>
                       <TableCell>
@@ -211,6 +277,7 @@ export default function TimeOff() {
                           {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                         </Badge>
                       </TableCell>
+<<<<<<< HEAD
                       <TableCell className="text-right">
                         {request.status === "pending" && (
                           <div className="flex items-center justify-end gap-2">
@@ -233,6 +300,32 @@ export default function TimeOff() {
                           </div>
                         )}
                       </TableCell>
+=======
+                      {isHROrAdmin && (
+                        <TableCell className="text-right">
+                          {request.status === "pending" && (
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleReject(request.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
+                                onClick={() => handleApprove(request.id)}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
                     </TableRow>
                   ))}
                 </TableBody>
@@ -241,7 +334,15 @@ export default function TimeOff() {
 
             {filteredRequests.length === 0 && (
               <div className="text-center py-8">
+<<<<<<< HEAD
                 <p className="text-muted-foreground">No time off requests found.</p>
+=======
+                <p className="text-muted-foreground">
+                  {isHROrAdmin 
+                    ? "No time off requests found." 
+                    : "You haven't submitted any time off requests yet."}
+                </p>
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
               </div>
             )}
           </CardContent>

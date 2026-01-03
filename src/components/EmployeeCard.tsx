@@ -2,8 +2,15 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
+<<<<<<< HEAD
 
 export type EmployeeStatus = "present" | "on-leave" | "absent";
+=======
+import { AttendanceStatusIndicator } from "./AttendanceStatusIndicator";
+import type { AttendanceStatus } from "./AttendanceStatusIndicator";
+
+export type EmployeeStatus = AttendanceStatus;
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 interface EmployeeCardProps {
   employee: {
@@ -17,6 +24,7 @@ interface EmployeeCardProps {
   onClick?: () => void;
 }
 
+<<<<<<< HEAD
 const statusConfig: Record<EmployeeStatus, { color: string; label: string; icon?: React.ReactNode }> = {
   present: { color: "bg-success", label: "Present" },
   "on-leave": { color: "bg-warning", label: "On Leave", icon: <Plane className="h-3 w-3" /> },
@@ -25,6 +33,9 @@ const statusConfig: Record<EmployeeStatus, { color: string; label: string; icon?
 
 export function EmployeeCard({ employee, onClick }: EmployeeCardProps) {
   const status = statusConfig[employee.status];
+=======
+export function EmployeeCard({ employee, onClick }: EmployeeCardProps) {
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
   const initials = employee.name
     .split(" ")
     .map((n) => n[0])
@@ -50,6 +61,7 @@ export function EmployeeCard({ employee, onClick }: EmployeeCardProps) {
               {initials}
             </AvatarFallback>
           </Avatar>
+<<<<<<< HEAD
           {/* Status indicator */}
           <div
             className={cn(
@@ -61,6 +73,14 @@ export function EmployeeCard({ employee, onClick }: EmployeeCardProps) {
             {status.icon && (
               <span className="text-white">{status.icon}</span>
             )}
+=======
+          {/* Status indicator positioned at top-right */}
+          <div
+            className="absolute -top-1 -right-1"
+            title={employee.status}
+          >
+            <AttendanceStatusIndicator status={employee.status} size="lg" />
+>>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
           </div>
         </div>
 
