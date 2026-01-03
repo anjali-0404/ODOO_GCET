@@ -9,6 +9,7 @@ import attendanceRoutes from './routes/attendance.js';
 import timeOffRoutes from './routes/timeOff.js';
 import benefitsRoutes from './routes/benefits.js';
 import usersRoutes from './routes/users.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/projects', projectsRoutes);
@@ -29,11 +31,6 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/time-off', timeOffRoutes);
 app.use('/api/benefits', benefitsRoutes);
 app.use('/api/users', usersRoutes);
-
-// Root route
-app.get('/', (req, res) => {
-  res.json({ message: 'API Server - DAYFLOW HR Management System', version: '1.0.0' });
-});
 
 // Health check
 app.get('/api/health', (req, res) => {

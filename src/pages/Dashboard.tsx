@@ -1,6 +1,8 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckInOutCard } from "@/components/CheckInOutCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +11,16 @@ import {
   Bell, 
   Calendar, 
   Plus,
+  Users,
+  ClipboardList,
+  TrendingUp,
+  Shield,
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
+  const isHROrAdmin = role === "hr" || role === "admin";
 
   return (
     <DashboardLayout>
@@ -26,7 +33,15 @@ export default function Dashboard() {
               <AvatarFallback>{user?.name?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-semibold">{user?.name || "User"}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold">{user?.name || "User"}</h1>
+                {isHROrAdmin && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Shield className="h-3 w-3" />
+                    {role === "admin" ? "Admin" : "HR"}
+                  </Badge>
+                )}
+              </div>
               <p className="text-muted-foreground">Welcome back to odoo 👋</p>
             </div>
           </div>
@@ -107,12 +122,66 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* HR Quick Actions - Only visible to HR/Admin */}
+            {isHROrAdmin && (
+              <Card className="mt-6 border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    HR Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => navigate("/dashboard/employees")}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Manage Employees
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => navigate("/dashboard/time-off")}
+                    >
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Review Requests
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => navigate("/dashboard/attendance")}
+                    >
+                      <TrendingUp className="mr-2 h-4 w-4" />
+                      Attendance Reports
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => navigate("/dashboard/team")}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Team Management
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
               <div className="bg-card border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground mb-1">Today's Status</p>
                 <p className="text-2xl font-semibold text-primary">
                   {user ? "Active" : "Offline"}
+                </p>
+              </div>
+              <div className="bg-card border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Role</p>
+                <p className="text-2xl font-semibold capitalize">
+                  {role || "Employee"}
                 </p>
               </div>
               <div className="bg-card border rounded-lg p-4">

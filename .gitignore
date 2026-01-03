@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # Dependencies
 node_modules/
 package-lock.json
@@ -14,22 +12,11 @@ build/
 .next/
 out/
 
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 # Logs
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
-<<<<<<< HEAD
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-=======
 pnpm-debug.log*
 lerna-debug.log*
 
@@ -41,24 +28,17 @@ lerna-debug.log*
 .env.production.local
 *.local
 server/.env
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-<<<<<<< HEAD
-.idea
-=======
 .idea/
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-<<<<<<< HEAD
-=======
 *~
 
 # OS files
@@ -73,4 +53,3 @@ coverage/
 
 # Misc
 *.tsbuildinfo
->>>>>>> ae566dc338734ca3515a8856c4c1f231dd4ce9dd

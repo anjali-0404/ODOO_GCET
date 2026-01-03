@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
-export type UserRole = "employee" | "hr";
+export type UserRole = "employee" | "hr" | "admin";
 
 interface User {
   id: string;
@@ -10,81 +12,224 @@ interface User {
   avatar?: string;
   department?: string;
   position?: string;
+  phone?: string;
+  location?: string;
+  status?: string;
+  joinDate?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  supabaseUser: SupabaseUser | null;
+  session: Session | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   role: UserRole | null;
-  signIn: (email: string, password: string, role: UserRole) => Promise<void>;
-  signOut: () => void;
-  updateUser: (user: Partial<User>) => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string, role?: UserRole) => Promise<void>;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithGithub: () => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  
-  // Load user from localStorage on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem("dayflow_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const mapSupabaseUser = (supaUser: SupabaseUser, metadata?: any): User => {
+    return {
+      id: supaUser.id,
+      name: metadata?.name || supaUser.user_metadata?.full_name || supaUser.email?.split("@")[0] || "User",
+      email: supaUser.email || "",
+      role: (metadata?.role || supaUser.user_metadata?.role || "employee") as UserRole,
+      avatar: metadata?.avatar || supaUser.user_metadata?.avatar_url,
+      department: metadata?.department || supaUser.user_metadata?.department,
+      position: metadata?.position || supaUser.user_metadata?.position,
+      phone: metadata?.phone || supaUser.user_metadata?.phone,
+      location: metadata?.location || supaUser.user_metadata?.location,
+      status: metadata?.status || "active",
+      joinDate: supaUser.created_at,
+    };
+  };
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching profile:", error);
+      }
+      return data;
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      return null;
     }
+  };
+
+  const upsertUserProfile = async (userId: string, profileData: Partial<User>) => {
+    try {
+      const { error } = await supabase.from("profiles").upsert({
+        id: userId,
+        name: profileData.name,
+        email: profileData.email,
+        role: profileData.role || "employee",
+        avatar: profileData.avatar,
+        department: profileData.department,
+        position: profileData.position,
+        phone: profileData.phone,
+        location: profileData.location,
+        status: profileData.status || "active",
+        updated_at: new Date().toISOString(),
+      });
+      if (error) {
+        console.error("Error upserting profile:", error);
+      }
+    } catch (error) {
+      console.error("Error upserting profile:", error);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (!supabaseUser) return;
+    const profile = await fetchUserProfile(supabaseUser.id);
+    const mappedUser = mapSupabaseUser(supabaseUser, profile);
+    setUser(mappedUser);
+    localStorage.setItem("odoo_user", JSON.stringify(mappedUser));
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setSupabaseUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then((profile) => {
+          const mappedUser = mapSupabaseUser(session.user, profile);
+          setUser(mappedUser);
+          localStorage.setItem("odoo_user", JSON.stringify(mappedUser));
+        });
+      }
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
+      setSession(session);
+      setSupabaseUser(session?.user ?? null);
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        const mappedUser = mapSupabaseUser(session.user, profile);
+        setUser(mappedUser);
+        localStorage.setItem("odoo_user", JSON.stringify(mappedUser));
+      } else {
+        setUser(null);
+        localStorage.removeItem("odoo_user");
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string, role: UserRole) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock user data based on role
-    const mockUser: User = role === "hr" 
-      ? {
-          id: "hr-001",
-          name: "Sarah Johnson",
-          email: email || "sarah.j@company.com",
-          role: "hr",
-          avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100",
-          department: "Human Resources",
-          position: "HR Manager",
-        }
-      : {
-          id: "emp-001",
-          name: "Sophia Williams",
-          email: email || "sophia.w@company.com",
-          role: "employee",
-          avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-          department: "Design",
-          position: "Senior Designer",
-        };
-    
-    setUser(mockUser);
-    localStorage.setItem("dayflow_user", JSON.stringify(mockUser));
-  };
-
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem("dayflow_user");
-  };
-
-  const updateUser = (updates: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-      localStorage.setItem("dayflow_user", JSON.stringify(updatedUser));
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    if (data.user) {
+      const profile = await fetchUserProfile(data.user.id);
+      const mappedUser = mapSupabaseUser(data.user, profile);
+      setUser(mappedUser);
     }
+  };
+
+  const signUp = async (name: string, email: string, password: string, role: UserRole = "employee") => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, role: role } },
+    });
+    if (error) throw new Error(error.message);
+    if (data.user) {
+      await upsertUserProfile(data.user.id, { id: data.user.id, name, email, role, status: "active" });
+      const mappedUser = mapSupabaseUser(data.user, { name, role });
+      setUser(mappedUser);
+    }
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw new Error(error.message);
+    setUser(null);
+    setSupabaseUser(null);
+    setSession(null);
+    localStorage.removeItem("odoo_user");
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + "/dashboard" },
+    });
+    if (error) throw new Error(error.message);
+  };
+
+  const signInWithGithub = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: window.location.origin + "/dashboard" },
+    });
+    if (error) throw new Error(error.message);
+  };
+
+  const updateUserProfile = async (updates: Partial<User>) => {
+    if (!supabaseUser) throw new Error("No user logged in");
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { full_name: updates.name, avatar_url: updates.avatar, ...updates },
+    });
+    if (authError) throw new Error(authError.message);
+    await upsertUserProfile(supabaseUser.id, updates);
+    await refreshUser();
+  };
+
+  const changePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(error.message);
+  };
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+    if (error) throw new Error(error.message);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        supabaseUser,
+        session,
+        isAuthenticated: !!user && !!session,
+        isLoading,
         role: user?.role || null,
         signIn,
+        signUp,
         signOut,
-        updateUser,
+        signInWithGoogle,
+        signInWithGithub,
+        updateUserProfile,
+        changePassword,
+        resetPassword,
+        refreshUser,
       }}
     >
       {children}

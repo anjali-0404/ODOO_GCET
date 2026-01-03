@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,125 +7,63 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Filter, Calendar, Users, Clock, MoreVertical } from "lucide-react";
+import { Plus, Search, Filter, Calendar, Users, Clock, MoreVertical, Trash2, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  status: "active" | "completed" | "on-hold" | "planning";
-  progress: number;
-  startDate: string;
-  endDate: string;
-  team: { name: string; avatar: string }[];
-  priority: "high" | "medium" | "low";
-  tasksCompleted: number;
-  totalTasks: number;
-}
-
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "Website Redesign",
-    description: "Complete overhaul of company website with modern UI/UX",
-    status: "active",
-    progress: 65,
-    startDate: "Jan 1, 2026",
-    endDate: "Mar 15, 2026",
-    team: [
-      { name: "John Doe", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John" },
-      { name: "Jane Smith", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane" },
-      { name: "Mike Wilson", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike" },
-    ],
-    priority: "high",
-    tasksCompleted: 13,
-    totalTasks: 20,
-  },
-  {
-    id: "2",
-    name: "Mobile App Development",
-    description: "Native mobile application for iOS and Android platforms",
-    status: "active",
-    progress: 45,
-    startDate: "Dec 15, 2025",
-    endDate: "Apr 30, 2026",
-    team: [
-      { name: "Sarah Johnson", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" },
-      { name: "Tom Brown", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Tom" },
-    ],
-    priority: "high",
-    tasksCompleted: 18,
-    totalTasks: 40,
-  },
-  {
-    id: "3",
-    name: "HR System Integration",
-    description: "Integrate new HRIS with existing payroll and attendance systems",
-    status: "active",
-    progress: 80,
-    startDate: "Nov 1, 2025",
-    endDate: "Jan 31, 2026",
-    team: [
-      { name: "Emily Davis", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily" },
-      { name: "Chris Lee", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Chris" },
-      { name: "Alex Kim", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" },
-    ],
-    priority: "medium",
-    tasksCompleted: 24,
-    totalTasks: 30,
-  },
-  {
-    id: "4",
-    name: "Marketing Campaign Q1",
-    description: "Launch new product marketing campaign across all channels",
-    status: "planning",
-    progress: 15,
-    startDate: "Jan 10, 2026",
-    endDate: "Mar 31, 2026",
-    team: [
-      { name: "Lisa Wang", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa" },
-    ],
-    priority: "medium",
-    tasksCompleted: 3,
-    totalTasks: 25,
-  },
-  {
-    id: "5",
-    name: "Security Audit 2025",
-    description: "Comprehensive security assessment and vulnerability testing",
-    status: "completed",
-    progress: 100,
-    startDate: "Oct 1, 2025",
-    endDate: "Dec 31, 2025",
-    team: [
-      { name: "David Miller", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David" },
-      { name: "Rachel Green", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rachel" },
-    ],
-    priority: "high",
-    tasksCompleted: 15,
-    totalTasks: 15,
-  },
-  {
-    id: "6",
-    name: "Office Renovation",
-    description: "Modernize office space with new furniture and equipment",
-    status: "on-hold",
-    progress: 30,
-    startDate: "Dec 1, 2025",
-    endDate: "Feb 28, 2026",
-    team: [
-      { name: "Kevin Park", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin" },
-    ],
-    priority: "low",
-    tasksCompleted: 6,
-    totalTasks: 20,
-  },
-];
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useProjects } from "@/contexts/ProjectsContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Projects() {
+  const navigate = useNavigate();
+  const { projects, addProject, deleteProject } = useProjects();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
+  const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
+  
+  const [newProject, setNewProject] = useState({
+    name: "",
+    description: "",
+    status: "planning" as "active" | "completed" | "on-hold" | "planning",
+    priority: "medium" as "high" | "medium" | "low",
+    startDate: "",
+    endDate: "",
+    budget: "",
+    department: "",
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -136,7 +75,7 @@ export default function Projects() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): "destructive" | "default" | "secondary" => {
     switch (priority) {
       case "high": return "destructive";
       case "medium": return "default";
@@ -145,7 +84,7 @@ export default function Projects() {
     }
   };
 
-  const filteredProjects = mockProjects.filter((project) => {
+  const filteredProjects = projects.filter((project) => {
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          project.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = activeTab === "all" || project.status === activeTab;
@@ -153,10 +92,56 @@ export default function Projects() {
   });
 
   const stats = {
-    total: mockProjects.length,
-    active: mockProjects.filter(p => p.status === "active").length,
-    completed: mockProjects.filter(p => p.status === "completed").length,
-    onHold: mockProjects.filter(p => p.status === "on-hold").length,
+    total: projects.length,
+    active: projects.filter(p => p.status === "active").length,
+    completed: projects.filter(p => p.status === "completed").length,
+    onHold: projects.filter(p => p.status === "on-hold").length,
+  };
+
+  const handleAddProject = () => {
+    if (!newProject.name || !newProject.startDate || !newProject.endDate) {
+      toast({ title: "Error", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+
+    addProject({
+      name: newProject.name,
+      description: newProject.description,
+      status: newProject.status,
+      priority: newProject.priority,
+      startDate: newProject.startDate,
+      endDate: newProject.endDate,
+      budget: newProject.budget || "$0",
+      department: newProject.department || "General",
+      progress: 0,
+      tasksCompleted: 0,
+      totalTasks: 0,
+      tasks: [],
+      team: [],
+      files: [],
+      activities: [],
+    });
+
+    setNewProject({
+      name: "",
+      description: "",
+      status: "planning",
+      priority: "medium",
+      startDate: "",
+      endDate: "",
+      budget: "",
+      department: "",
+    });
+    setIsAddProjectOpen(false);
+    toast({ title: "Project created", description: "New project has been added." });
+  };
+
+  const handleDeleteProject = () => {
+    if (deleteProjectId) {
+      deleteProject(deleteProjectId);
+      setDeleteProjectId(null);
+      toast({ title: "Project deleted", description: "Project has been removed." });
+    }
   };
 
   return (
@@ -168,7 +153,7 @@ export default function Projects() {
             <h1 className="text-3xl font-bold">Projects</h1>
             <p className="text-muted-foreground">Manage and track all your projects</p>
           </div>
-          <Button>
+          <Button onClick={() => setIsAddProjectOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Button>
@@ -221,10 +206,6 @@ export default function Projects() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
         </div>
 
         {/* Tabs */}
@@ -241,16 +222,34 @@ export default function Projects() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
-            <Card key={project.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={project.id} 
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 cursor-pointer" onClick={() => navigate(`/dashboard/projects/${project.id}`)}>
                     <CardTitle className="text-lg mb-1">{project.name}</CardTitle>
                     <CardDescription className="line-clamp-2">{project.description}</CardDescription>
                   </div>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate(`/dashboard/projects/${project.id}`)}>
+                        <Edit className="mr-2 h-4 w-4" />View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setDeleteProjectId(project.id)} 
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />Delete Project
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <div className="flex gap-2 mt-3">
                   <Badge className={getStatusColor(project.status)}>
@@ -261,7 +260,7 @@ export default function Projects() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 cursor-pointer" onClick={() => navigate(`/dashboard/projects/${project.id}`)}>
                 {/* Progress */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -310,6 +309,118 @@ export default function Projects() {
             <p className="text-muted-foreground">No projects found</p>
           </div>
         )}
+
+        {/* Add Project Dialog */}
+        <Dialog open={isAddProjectOpen} onOpenChange={setIsAddProjectOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create New Project</DialogTitle>
+              <DialogDescription>Add a new project to your workspace</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Project Name *</Label>
+                  <Input 
+                    placeholder="Enter project name" 
+                    value={newProject.name} 
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Department</Label>
+                  <Input 
+                    placeholder="e.g., Engineering" 
+                    value={newProject.department} 
+                    onChange={(e) => setNewProject({ ...newProject, department: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea 
+                  placeholder="Describe the project..." 
+                  value={newProject.description} 
+                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} 
+                  rows={3} 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={newProject.status} onValueChange={(v) => setNewProject({ ...newProject, status: v as any })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on-hold">On Hold</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Priority</Label>
+                  <Select value={newProject.priority} onValueChange={(v) => setNewProject({ ...newProject, priority: v as any })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Start Date *</Label>
+                  <Input 
+                    type="date" 
+                    value={newProject.startDate} 
+                    onChange={(e) => setNewProject({ ...newProject, startDate: e.target.value })} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>End Date *</Label>
+                  <Input 
+                    type="date" 
+                    value={newProject.endDate} 
+                    onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Budget</Label>
+                <Input 
+                  placeholder="e.g., $50,000" 
+                  value={newProject.budget} 
+                  onChange={(e) => setNewProject({ ...newProject, budget: e.target.value })} 
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddProjectOpen(false)}>Cancel</Button>
+              <Button onClick={handleAddProject}>Create Project</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deleteProjectId} onOpenChange={() => setDeleteProjectId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Project</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this project? This action cannot be undone and will remove all tasks, files, and team assignments.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

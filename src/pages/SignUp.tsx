@@ -16,6 +16,8 @@ import { useState } from "react";
 import { Mail, Lock, User, Building2, Phone, Upload, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import dayflowLogo from "@/assets/dayflow-logo.svg";
+import odooLogo from "@/assets/image.png";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -49,6 +51,7 @@ interface FormErrors {
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState<SignUpFormData>({
     companyName: "",
     name: "",
@@ -152,24 +155,13 @@ const SignUp = () => {
     setErrors({});
 
     try {
-      const employeeId = generateEmployeeId(formData.companyName, formData.name);
-      console.log("Generated Employee ID:", employeeId);
-      
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await signUp(formData.name, formData.email, formData.password, formData.role as "employee" | "hr");
       setIsSuccess(true);
-      setFormData({
-        companyName: "",
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-        role: "",
-        acceptTerms: false,
-      });
-    } catch {
+      // Navigate to dashboard after successful signup
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } catch (error: any) {
       setErrors({
-        general: "An unexpected error occurred. Please try again.",
+        general: error.message || "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsLoading(false);

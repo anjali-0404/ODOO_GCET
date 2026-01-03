@@ -8,26 +8,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserProfileDropdownProps {
-  user?: {
-    name: string;
-    email: string;
-    avatar?: string;
-    isCheckedIn?: boolean;
-  };
   showFullProfile?: boolean;
 }
 
-export function UserProfileDropdown({ user, showFullProfile = false }: UserProfileDropdownProps) {
+export function UserProfileDropdown({ showFullProfile = false }: UserProfileDropdownProps) {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   
-  // Default mock user for now
+  // Use the authenticated user from context
   const currentUser = user || {
-    name: "Sophia Williams",
-    email: "sophia@alignui.com",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    isCheckedIn: true,
+    name: "Guest User",
+    email: "guest@example.com",
+    avatar: undefined,
   };
 
   const initials = currentUser.name
@@ -38,7 +33,7 @@ export function UserProfileDropdown({ user, showFullProfile = false }: UserProfi
     .slice(0, 2);
 
   const handleLogout = () => {
-    // Will implement actual logout logic later
+    signOut();
     navigate("/signin");
   };
 
@@ -53,12 +48,8 @@ export function UserProfileDropdown({ user, showFullProfile = false }: UserProfi
                 {initials}
               </AvatarFallback>
             </Avatar>
-            {/* Status indicator */}
-            <span
-              className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card ${
-                currentUser.isCheckedIn ? "bg-success" : "bg-destructive"
-              }`}
-            />
+            {/* Status indicator - online */}
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card bg-success" />
           </div>
           {showFullProfile && (
             <div className="flex-1 text-left min-w-0">
